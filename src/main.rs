@@ -1,3 +1,95 @@
+use clap::{Args, Parser, Subcommand};
+
+// def run():
+
+//     parser = argparse.ArgumentParser(
+//         description="A minimal UPnP/DLNA media streamer.")
+//     parser.set_defaults(func=lambda args: parser.print_help())
+//     parser.add_argument("-t", "--timeout", type=float, default=5)
+//     parser.add_argument("-b", "--debug",
+//                         dest="debug_activated", action="store_true")
+//     subparsers = parser.add_subparsers(dest="subparser_name")
+
+//     p_list = subparsers.add_parser('list')
+//     p_list.set_defaults(func=list_devices)
+
+//     p_play = subparsers.add_parser('play')
+//     p_play.add_argument("-d", "--device", dest="device_url")
+//     p_play.add_argument("-H", "--host", dest="local_host")
+//     p_play.add_argument("-q", "--query-device", dest="device_query")
+//     p_play.add_argument("-s", "--subtitle", dest="file_subtitle")
+//     p_play.add_argument("-n", "--no-subtitle",
+//                         dest="use_subtitle", action="store_false")
+//     p_play.add_argument("file_video")
+//     p_play.set_defaults(func=play)
+
+//     args = parser.parse_args()
+
+
+/// Simple program to greet a person
+#[derive(Parser)]
+#[clap(author, version, about = "A minimal UPnP/DLNA media streamer.", long_about = None)]
+struct Cli {
+    /// Time in seconds to search and discover streamer hosts
+    #[clap(short, long, default_value_t = 5.0)]
+    timeout: f32,
+
+    /// Turn debugging information on
+    #[clap(short='b')]
+    debug: bool,
+
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Scan and list devices in the network capable of playing media
+    List(List),
+
+    // Play a video file
+    Play(Play),
+}
+
+#[derive(Args)]
+struct List;
+
+#[derive(Args)]
+struct Play {
+    /// The hostname or IP to be used to host and serve the files (if not provided we derive it from the local network address)
+    #[clap(short='H', long="host")]
+    local_host: Option<String>,
+
+    /// Specify the device where to play through a query (scan devices before playing)
+    #[clap(short='q', long="query-device")]
+    device_query: Option<String>,
+
+    /// Specify the device where to play through its exact location (no scan, faster)
+    #[clap(short, long="device")]
+    device_url: Option<String>,
+
+    /// The file of the subtitle (if not provided, we derive it from <FILE_VIDEO>)
+    #[clap(short, long, parse(from_os_str), value_name="FILE_SUBTITLE")]
+    subtitle: Option<std::path::PathBuf>,
+
+    /// Disable subtitles
+    #[clap(short, long)]
+    no_subtitle: bool,
+
+    /// The file of the video to be played
+    #[clap(parse(from_os_str))]
+    file_video: std::path::PathBuf,
+}
+
 fn main() {
-    println!("Hello, world!");
+    let cli = Cli::parse();
+
+    match &cli.command {
+        Commands::List(_) => {
+            println!("Listing devices")
+        }
+        Commands::Play(..) => {
+            println!("Playing file")
+        }
+    }
 }
