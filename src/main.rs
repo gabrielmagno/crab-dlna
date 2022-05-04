@@ -1,5 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 
+mod streaming;
+
 /// A minimal UPnP/DLNA media streamer
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -56,14 +58,29 @@ struct Play {
 }
 
 fn main() {
-    let cli = Cli::parse();
+    let streaming_server = streaming::create_streaming_server(
+        &std::path::PathBuf::from("./sample/video.mp4"),
+        Some(&std::path::PathBuf::from("./sample/video.srt")),
+        "127.0.0.1".to_string(),
+    );
 
-    match &cli.command {
-        Commands::List(_) => {
-            println!("Listing devices")
-        }
-        Commands::Play(..) => {
-            println!("Playing file")
-        }
-    }
+    streaming_server.print();
+    //println!(streaming_server.subtitle_file.uri.unwrap());
+    // let cli = Cli::parse();
+
+    // match &cli.command {
+    //     Commands::List(_) => {
+    //         println!("Listing devices")
+    //     }
+    //     Commands::Play(..) => {
+    //         println!("Playing file")
+    //     }
+    // }
+
+    // let streaming_server = warp::path!("files" / "video.md")
+    //     .and(warp::fs::file("./README.md"));
+
+    // warp::serve(streaming_server)
+    //     .run(([127, 0, 0, 1], 9000))
+    //     .await;
 }
