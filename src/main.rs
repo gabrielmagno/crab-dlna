@@ -1,34 +1,8 @@
 use clap::{Args, Parser, Subcommand};
 
-// def run():
-
-//     parser = argparse.ArgumentParser(
-//         description="A minimal UPnP/DLNA media streamer.")
-//     parser.set_defaults(func=lambda args: parser.print_help())
-//     parser.add_argument("-t", "--timeout", type=float, default=5)
-//     parser.add_argument("-b", "--debug",
-//                         dest="debug_activated", action="store_true")
-//     subparsers = parser.add_subparsers(dest="subparser_name")
-
-//     p_list = subparsers.add_parser('list')
-//     p_list.set_defaults(func=list_devices)
-
-//     p_play = subparsers.add_parser('play')
-//     p_play.add_argument("-d", "--device", dest="device_url")
-//     p_play.add_argument("-H", "--host", dest="local_host")
-//     p_play.add_argument("-q", "--query-device", dest="device_query")
-//     p_play.add_argument("-s", "--subtitle", dest="file_subtitle")
-//     p_play.add_argument("-n", "--no-subtitle",
-//                         dest="use_subtitle", action="store_false")
-//     p_play.add_argument("file_video")
-//     p_play.set_defaults(func=play)
-
-//     args = parser.parse_args()
-
-
-/// Simple program to greet a person
+/// A minimal UPnP/DLNA media streamer
 #[derive(Parser)]
-#[clap(author, version, about = "A minimal UPnP/DLNA media streamer.", long_about = None)]
+#[clap(author, version, about, long_about = None)]
 struct Cli {
     /// Time in seconds to search and discover streamer hosts
     #[clap(short, long, default_value_t = 5.0)]
