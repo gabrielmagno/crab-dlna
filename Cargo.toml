@@ -9,3 +9,4 @@ edition = "2021"
 clap = { version = "3.1.15", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 warp = "0.3"
+slugify = "0.1.0"

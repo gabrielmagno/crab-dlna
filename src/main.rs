@@ -57,15 +57,9 @@ struct Play {
     file_video: std::path::PathBuf,
 }
 
-fn main() {
-    let streaming_server = streaming::create_streaming_server(
-        &std::path::PathBuf::from("./sample/video.mp4"),
-        Some(&std::path::PathBuf::from("./sample/video.srt")),
-        "127.0.0.1".to_string(),
-    );
+#[tokio::main]
+async fn main() {
 
-    streaming_server.print();
-    //println!(streaming_server.subtitle_file.uri.unwrap());
     // let cli = Cli::parse();
 
     // match &cli.command {
@@ -77,10 +71,15 @@ fn main() {
     //     }
     // }
 
-    // let streaming_server = warp::path!("files" / "video.md")
-    //     .and(warp::fs::file("./README.md"));
+    let streaming_server = streaming::create_streaming_server(
+        &std::path::PathBuf::from("./sample/video.mp4"),
+        Some(&std::path::PathBuf::from("./sample/video.srt")),
+        "127.0.0.1".to_string(),
+    );
 
-    // warp::serve(streaming_server)
-    //     .run(([127, 0, 0, 1], 9000))
-    //     .await;
+    let streaming_routes = streaming_server.routes();
+
+    warp::serve(streaming_routes)
+        .run(streaming_server.server_addr)
+        .await;
 }
