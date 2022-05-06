@@ -28,33 +28,36 @@ impl Render {
         }
     }
 
-    pub async fn find_all(duration_secs: u64) -> Result<Vec<Self>, rupnp::Error> {
+    pub async fn find_all(duration_secs: u64) -> Vec<Self> {
 
         let search_target = SearchTarget::URN(AV_TRANSPORT);
-        let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs)).await?;
+        let devices = match rupnp::discover(&search_target, Duration::from_secs(duration_secs)).await {
+            Ok(devices) => devices,
+            Err(e) => panic!("Failed to discover devices, error: {}", e)
+        };
+        
         pin_utils::pin_mut!(devices);
     
         let mut renders = Vec::new();
     
-        while let Some(device) = devices.try_next().await? {
+        while let Some(device) = devices.try_next().await.unwrap_or_else(|e| panic!("Failed to get next device, error: {}", e)) {
             match Self::from_device(device).await {
                 Some(render) => { renders.push(render); }
                 None => {}
-            }
+            };
         }
     
-        return Ok(renders);
+        return renders;
     }
 
-    pub async fn select_by_query(duration_secs: u64, query: &str) -> Result<Option<Self>, rupnp::Error> {
-        let renders = Self::find_all(duration_secs).await?;
-        for render in renders {
+    pub async fn select_by_query(duration_secs: u64, query: &str) -> Option<Self> {
+        for render in Self::find_all(duration_secs).await {
             let render_str = render.to_string();
             if render_str.contains(query) {
-                return Ok(Some(render));
+                return Some(render);
             }
         }
-        Ok(None)
+        None
     }
 
     pub async fn select_by_url(url: &'static str) -> Option<Self> {
@@ -63,8 +66,9 @@ impl Render {
         
         let device = rupnp::Device::from_url(uri)
             .await
-            .expect(
-                format!("Failed to retrieve device from {}", url).as_str()
+            .unwrap_or_else(
+                |e|
+                panic!("Failed to retrieve device from {}, error: {}", url, e)
             );
     
         Self::from_device(device).await

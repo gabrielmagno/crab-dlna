@@ -72,7 +72,7 @@ async fn main() {
     //     }
     // }
     
-    for render in devices::Render::find_all(5).await.unwrap() {
+    for render in devices::Render::find_all(5).await {
         println!("{}", render);
     }
 
