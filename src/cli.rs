@@ -110,12 +110,12 @@ impl Play {
 
     async fn build_media_streaming_server(&self, render: &Render) -> MediaStreamingServer {
         let render_host = render.device.url().authority().unwrap().host().to_string();
+        let local_host_ip = get_serve_ip(&render_host).await;
         let host_ip = self
             .local_host
             .as_ref()
-            .unwrap_or(&render_host);
+            .unwrap_or(&local_host_ip);
 
-        // FIXME: thread 'tokio-runtime-worker' panicked at 'exact path segments should not be empty'
         MediaStreamingServer::new(
             &self.file_video,
             &self.subtitle,

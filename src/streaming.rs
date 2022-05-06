@@ -1,9 +1,9 @@
-use std::net::{SocketAddr, TcpStream};
+use std::net::{SocketAddr, UdpSocket};
 use warp::Filter;
 
 use slugify::slugify;
 
-const DUMMY_PORT: u32 = 80;
+const DUMMY_PORT: u32 = 0;
 const STREAMING_PORT: u32 = 9000;
 
 #[derive(Debug, Clone)]
@@ -127,7 +127,7 @@ impl MediaStreamingServer {
                     .and(warp::fs::file(subtitle_file.file_path.clone()))
             }
             None => {
-                warp::path("".to_string())
+                warp::path("dummy.srt".to_string())
                     .and(warp::fs::file(self.video_file.file_path.clone()))
             }
         };
@@ -158,17 +158,18 @@ pub async fn get_serve_ip(target_host: &String) -> String {
             )
         );
 
-    TcpStream::connect(target_addr)
+    UdpSocket::bind(target_addr)
         .unwrap_or_else(
             |e| panic!(
-                "Failed connecting to the remote render to identify streaming server adress, error: {}", 
+                "Failed connecting to the remote render '{}' to identify streaming server adress, error: {}", 
+                target_addr,
                 e
             )
         )
         .local_addr()
         .unwrap_or_else(
             |e| panic!(
-                "Failed getting local address,, error: {}", e
+                "Failed getting local address, error: {}", e
             )
         )
         .ip()
