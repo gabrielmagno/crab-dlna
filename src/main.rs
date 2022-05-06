@@ -6,7 +6,7 @@ mod cli;
 #[tokio::main]
 async fn main() {
 
-    crate::cli::run();
+    crate::cli::run().await;
     
     // for render in devices::Render::find_all(5).await {
     //     println!("{}", render);

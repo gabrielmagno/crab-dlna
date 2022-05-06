@@ -50,19 +50,23 @@ impl Render {
         return renders;
     }
 
-    pub async fn select_by_query(duration_secs: u64, query: &str) -> Option<Self> {
+    pub async fn select_by_query(duration_secs: u64, query: &String) -> Option<Self> {
         for render in Self::find_all(duration_secs).await {
             let render_str = render.to_string();
-            if render_str.contains(query) {
+            if render_str.contains(query.as_str()) {
                 return Some(render);
             }
         }
         None
     }
 
-    pub async fn select_by_url(url: &'static str) -> Option<Self> {
+    pub async fn select_by_url(url: &String) -> Option<Self> {
 
-        let uri = Uri::from_static(url);
+        let uri: Uri = url.parse()
+            .unwrap_or_else(
+                |_|
+                panic!("Failed to parse URL from {}", url)
+            );
         
         let device = rupnp::Device::from_url(uri)
             .await

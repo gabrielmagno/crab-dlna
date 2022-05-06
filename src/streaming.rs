@@ -1,8 +1,9 @@
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpStream};
 use warp::Filter;
 
 use slugify::slugify;
 
+const DUMMY_PORT: u32 = 80;
 const STREAMING_PORT: u32 = 9000;
 
 #[derive(Debug, Clone)]
@@ -22,9 +23,9 @@ pub struct MediaStreamingServer {
 impl MediaStreamingServer {
 
     pub fn new(
-        video_path: std::path::PathBuf, 
-        subtitle_path: Option<std::path::PathBuf>,
-        host_ip: String,
+        video_path: &std::path::PathBuf, 
+        subtitle_path: &Option<std::path::PathBuf>,
+        host_ip: &String,
     ) -> Self {
 
         let server_addr: SocketAddr = format!("{}:{}", host_ip, STREAMING_PORT)
@@ -144,4 +145,32 @@ impl MediaStreamingServer {
             .run(self.server_addr)
             .await;
     }
+}
+
+pub async fn get_serve_ip(target_host: &String) -> String {
+    let target_addr: SocketAddr = format!("{}:{}", target_host, DUMMY_PORT)
+        .parse()
+        .unwrap_or_else(
+            |e| panic!(
+                "Unable to parse socket address for target host '{}', error: {}", 
+                target_host,
+                e
+            )
+        );
+
+    TcpStream::connect(target_addr)
+        .unwrap_or_else(
+            |e| panic!(
+                "Failed connecting to the remote render to identify streaming server adress, error: {}", 
+                e
+            )
+        )
+        .local_addr()
+        .unwrap_or_else(
+            |e| panic!(
+                "Failed getting local address,, error: {}", e
+            )
+        )
+        .ip()
+        .to_string()
 }
