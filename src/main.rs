@@ -1,5 +1,6 @@
 use clap::{Args, Parser, Subcommand};
 
+mod devices;
 mod streaming;
 
 /// A minimal UPnP/DLNA media streamer
@@ -70,16 +71,41 @@ async fn main() {
     //         println!("Playing file")
     //     }
     // }
+    
+    for render in devices::Render::find_all(5).await.unwrap() {
+        println!("{}", render);
+    }
 
-    let streaming_server = streaming::create_streaming_server(
-        &std::path::PathBuf::from("./sample/video.mp4"),
-        Some(&std::path::PathBuf::from("./sample/video.srt")),
-        "127.0.0.1".to_string(),
-    );
+    // match devices::Render::select_by_query(5, "Kodi").await {
+    //     Ok(Some(render)) => {
+    //         println!("{}", render);
+    //     }
+    //     Ok(None) => {
+    //         println!("No render found");
+    //     }
+    //     Err(e) => {
+    //         println!("Error: {}", e);
+    //     }
+    // }
 
-    let streaming_routes = streaming_server.routes();
+    // match devices::Render::select_by_url("http://127.0.0.1:8000").await {
+    //     Some(render) => {
+    //         println!("{}", render);
+    //     }
+    //     None => {
+    //         println!("No render found");
+    //     }
+    // }
 
-    warp::serve(streaming_routes)
-        .run(streaming_server.server_addr)
-        .await;
+    // let streaming_server = streaming::create_streaming_server(
+    //     &std::path::PathBuf::from("./sample/video.mp4"),
+    //     Some(&std::path::PathBuf::from("./sample/video.srt")),
+    //     "127.0.0.1".to_string(),
+    // );
+
+    // let streaming_routes = streaming_server.routes();
+
+    // warp::serve(streaming_routes)
+    //     .run(streaming_server.server_addr)
+    //     .await;
 }
