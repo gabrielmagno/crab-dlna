@@ -2,6 +2,7 @@ use clap::{Args, Parser, Subcommand};
 
 mod devices;
 mod streaming;
+mod dlna;
 
 /// A minimal UPnP/DLNA media streamer
 #[derive(Parser)]
@@ -72,40 +73,35 @@ async fn main() {
     //     }
     // }
     
-    for render in devices::Render::find_all(5).await {
-        println!("{}", render);
-    }
-
-    // match devices::Render::select_by_query(5, "Kodi").await {
-    //     Ok(Some(render)) => {
-    //         println!("{}", render);
-    //     }
-    //     Ok(None) => {
-    //         println!("No render found");
-    //     }
-    //     Err(e) => {
-    //         println!("Error: {}", e);
-    //     }
+    // for render in devices::Render::find_all(5).await {
+    //     println!("{}", render);
     // }
 
-    // match devices::Render::select_by_url("http://127.0.0.1:8000").await {
+    // let render = match devices::Render::select_by_url("http://172.22.176.1:1313/").await {
     //     Some(render) => {
     //         println!("{}", render);
+    //         render
     //     }
     //     None => {
-    //         println!("No render found");
+    //         panic!("No render found");
     //     }
-    // }
+    // };
 
-    // let streaming_server = streaming::create_streaming_server(
-    //     &std::path::PathBuf::from("./sample/video.mp4"),
-    //     Some(&std::path::PathBuf::from("./sample/video.srt")),
-    //     "127.0.0.1".to_string(),
-    // );
+    let render = match devices::Render::select_by_query(3, "Kodi").await {
+        Some(render) => {
+            println!("{}", render);
+            render
+        }
+        None => {
+            panic!("No render found");
+        }
+    };
 
-    // let streaming_routes = streaming_server.routes();
+    let streaming_server = streaming::MediaStreamingServer::new(
+        std::path::PathBuf::from("./sample/video.mp4"),
+        Some(std::path::PathBuf::from("./sample/video.srt")),
+        "127.0.0.1".to_string(),
+    );
 
-    // warp::serve(streaming_routes)
-    //     .run(streaming_server.server_addr)
-    //     .await;
+    dlna::play(render, streaming_server).await;
 }

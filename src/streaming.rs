@@ -5,11 +5,14 @@ use slugify::slugify;
 
 const STREAMING_PORT: u32 = 9000;
 
+#[derive(Debug, Clone)]
 struct MediaFile {
     file_path: std::path::PathBuf,
     host_uri: String,
     file_uri: String
 }
+
+#[derive(Debug, Clone)]
 pub struct MediaStreamingServer {
     video_file: MediaFile,
     subtitle_file: Option<MediaFile>,
@@ -65,6 +68,32 @@ impl MediaStreamingServer {
             video_file,
             subtitle_file,
             server_addr
+        }
+    }
+
+    pub fn video_uri(&self) -> String {
+        format!("{}/{}", self.video_file.host_uri, self.video_file.file_uri)
+    }
+
+    pub fn video_type(&self) -> String {
+        self.video_file.file_path.as_path().extension().unwrap().to_str().unwrap().to_string()
+    }
+
+    pub fn subtitle_uri(&self) -> Option<String> {
+        match &self.subtitle_file {
+            Some(subtitle_file) => Some(
+                format!("{}/{}", subtitle_file.host_uri, subtitle_file.file_uri)
+            ),
+            None => None
+        }
+    }
+
+    pub fn subtitle_type(&self) -> Option<String> {
+        match &self.subtitle_file {
+            Some(subtitle_file) => Some(
+                subtitle_file.file_path.as_path().extension().unwrap().to_str().unwrap().to_string()
+            ),
+            None => None
         }
     }
 
