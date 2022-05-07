@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 
 use crate::devices::Render;
-use crate::streaming::{MediaStreamingServer, get_serve_ip};
+use crate::streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video};
 use crate::dlna;
 
 /// A minimal UPnP/DLNA media streamer
@@ -116,9 +116,14 @@ impl Play {
             .as_ref()
             .unwrap_or(&local_host_ip);
 
+        let subtitle = match &self.no_subtitle {
+            false => self.subtitle.clone().or(infer_subtitle_from_video(&self.file_video)),
+            true => None
+        };
+
         MediaStreamingServer::new(
             &self.file_video,
-            &self.subtitle,
+            &subtitle,
             &host_ip,
         )
     }

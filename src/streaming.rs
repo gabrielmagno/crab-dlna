@@ -98,21 +98,6 @@ impl MediaStreamingServer {
         }
     }
 
-    pub fn infer_subtitle_from_video(video_path: std::path::PathBuf) -> Option<std::path::PathBuf> {
-        let infered_subtitle_path = video_path.with_extension("srt");
-        match infered_subtitle_path.exists() {
-            true => Some(infered_subtitle_path),
-            false => {
-                println!(
-                    "Tried inferring subtitle file from video file '{}', but it does not exist: {}", 
-                    video_path.display(),
-                    infered_subtitle_path.display()
-                );
-                None
-            }
-        }
-    }
-
     fn get_routes(&self) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
 
         let video_route = warp::path(self.video_file.file_uri.to_string())
@@ -175,3 +160,19 @@ pub async fn get_serve_ip(target_host: &String) -> String {
         .ip()
         .to_string()
 }
+
+pub fn infer_subtitle_from_video(video_path: &std::path::PathBuf) -> Option<std::path::PathBuf> {
+    let infered_subtitle_path = video_path.with_extension("srt");
+    match infered_subtitle_path.exists() {
+        true => Some(infered_subtitle_path),
+        false => {
+            println!(
+                "Tried inferring subtitle file from video file '{}', but it does not exist: {}", 
+                video_path.display(),
+                infered_subtitle_path.display()
+            );
+            None
+        }
+    }
+}
+
