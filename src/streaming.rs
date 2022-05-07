@@ -167,7 +167,7 @@ pub fn infer_subtitle_from_video(video_path: &std::path::PathBuf) -> Option<std:
         true => Some(infered_subtitle_path),
         false => {
             println!(
-                "Tried inferring subtitle file from video file '{}', but it does not exist: {}", 
+                "Tried inferring subtitle file from video file '{}', but it does not exist: '{}'", 
                 video_path.display(),
                 infered_subtitle_path.display()
             );
