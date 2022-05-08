@@ -1,4 +1,6 @@
+use std::env;
 use log::info;
+use pretty_env_logger;
 use clap::{Args, Parser, Subcommand};
 use crate::{
     devices::{Render, RenderSpec},
@@ -15,6 +17,14 @@ struct Cli {
     #[clap(short, long, default_value_t = 5)]
     timeout: u64,
 
+    /// Turn debugging information on
+    #[clap(short, long)]
+    quiet: bool,
+
+    /// Turn debugging information on
+    #[clap(short='b', long)]
+    debug: bool,
+
     #[clap(subcommand)]
     command: Commands,
 }
@@ -30,11 +40,23 @@ enum Commands {
 
 impl Commands {
     pub async fn run(&self, cli: &Cli) -> Result<()> {
+        self.setup_log(&cli);
         match self {
             Self::List(list) => list.run(cli).await?,
             Self::Play(play) => play.run(cli).await?,
         }
         Ok(())
+    }
+
+    fn setup_log(&self, cli: &Cli) {
+        let crabldna_log = env::var("CRABDLNA_LOG");
+        let log_level = if 
+            let Ok(crabldna_log) = &crabldna_log { crabldna_log.as_str() }
+            else if cli.debug { "debug" }
+            else if cli.quiet { "warn" }
+            else { "info" };
+        env::set_var("RUST_LOG", log_level);
+        pretty_env_logger::init();
     }
 }
 
