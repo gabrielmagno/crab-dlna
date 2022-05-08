@@ -1,5 +1,5 @@
+use log::info;
 use clap::{Args, Parser, Subcommand};
-
 use crate::{
     devices::{Render, RenderSpec},
     streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video},
@@ -15,10 +15,6 @@ struct Cli {
     #[clap(short, long, default_value_t = 5)]
     timeout: u64,
 
-    /// Turn debugging information on
-    #[clap(short='b')]
-    debug: bool,
-
     #[clap(subcommand)]
     command: Commands,
 }
@@ -28,7 +24,7 @@ enum Commands {
     /// Scan and list devices in the network capable of playing media
     List(List),
 
-    // Play a video file
+    /// Play a video file
     Play(Play),
 }
 
@@ -47,6 +43,7 @@ struct List;
 
 impl List {
     async fn run(&self, cli: &Cli) -> Result<()> {
+        info!("List devices");
         for render in Render::discover(cli.timeout).await? {
             println!("{}", render);
         }
@@ -89,6 +86,7 @@ impl Play {
     }
 
     async fn select_render(&self, cli: &Cli) -> Result<Render> {
+        info!("Selecting render");
         Render::new(
             if let Some(device_url) = &self.device_url {
                 RenderSpec::Location(device_url.to_owned())
@@ -104,6 +102,7 @@ impl Play {
     }
 
     async fn build_media_streaming_server(&self, render: &Render) -> Result<MediaStreamingServer> {
+        info!("Building media streaming server");
         let render_host = render.device.url().authority().unwrap().host().to_string();
         let local_host_ip = get_serve_ip(&render_host).await?;
         let host_ip = self

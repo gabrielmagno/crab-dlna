@@ -1,10 +1,24 @@
 use futures::prelude::*;
-use rupnp::ssdp::{SearchTarget, URN};
+use log::{info, warn,debug};
 use std::time::Duration;
 use http::Uri;
+use rupnp::ssdp::{SearchTarget, URN};
 use crate::{Error, Result};
 
 const AV_TRANSPORT: URN = URN::service("schemas-upnp-org", "AVTransport", 1);
+
+macro_rules! format_device{
+    ($device:expr)=>{
+        {
+            format!(
+                "[{}] {} @ {}", 
+                $device.device_type(), 
+                $device.friendly_name(), 
+                $device.url()
+            )
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Render {
@@ -24,17 +38,17 @@ impl Render {
     pub async fn new(render_spec: RenderSpec) -> Result<Self> {
         match &render_spec {
             RenderSpec::Location(device_url) => {
-                println!("Using device: {}", device_url);
+                info!("Render specified by location: {}", device_url);
                 Self::select_by_url(&device_url).await?
                     .ok_or(Error::DevicesRenderNotFound(render_spec))
             },
             RenderSpec::Query(timeout, device_query) => {
-                println!("Searching device with query: {}", device_query);
+                info!("Render specified by query: {}", device_query);
                 Self::select_by_query(*timeout, &device_query).await?
                     .ok_or(Error::DevicesRenderNotFound(render_spec))
             },
             RenderSpec::First(timeout) => {
-                println!("Selecting first available device");
+                info!("No render specified, selecting first one");
                 Ok(
                     Self::discover(*timeout)
                         .await?
@@ -48,6 +62,7 @@ impl Render {
 
     pub async fn discover(duration_secs: u64) -> Result<Vec<Self>> {
 
+        info!("Discovering devices in the network, waiting {} seconds...", duration_secs);
         let search_target = SearchTarget::URN(AV_TRANSPORT);
         let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs))
             .await
@@ -57,7 +72,9 @@ impl Render {
     
         let mut renders = Vec::new();
     
-        while let Some(device) = devices.try_next().await.map_err(|err| Error::DevicesNextDeviceError(err))? { 
+
+        while let Some(device) = devices.try_next().await.map_err(|err| Error::DevicesNextDeviceError(err))? {
+            debug!("Found device: {}", format_device!(device)); 
             match Self::from_device(device).await {
                 Some(render) => { renders.push(render); }
                 None => {}
@@ -68,7 +85,7 @@ impl Render {
     }
 
     async fn select_by_url(url: &String) -> Result<Option<Self>> {
-
+        debug!("Selecting device by url: {}", url);
         let uri: Uri = url.parse()
             .map_err(|_| Error::DevicesUrlParseError(url.to_owned()))?;
         
@@ -80,6 +97,7 @@ impl Render {
     }
 
     async fn select_by_query(duration_secs: u64, query: &String) -> Result<Option<Self>> {
+        debug!("Selecting device by query: '{}'", query);
         for render in Self::discover(duration_secs).await? {
             let render_str = render.to_string();
             if render_str.contains(query.as_str()) {
@@ -90,6 +108,7 @@ impl Render {
     }
 
     async fn from_device(device: rupnp::Device) -> Option<Self> {
+        debug!("Retrieving AVTransport service from device '{}'", format_device!(device));
         match device.find_service(&AV_TRANSPORT) {
             Some(service) => Some(
                 Self{
@@ -98,7 +117,7 @@ impl Render {
                 }
             ),
             None => {
-                println!("WARNING: No AVTransport service found on {}", device.friendly_name());
+                warn!("No AVTransport service found on {}", device.friendly_name());
                 None
             }
         }

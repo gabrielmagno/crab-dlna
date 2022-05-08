@@ -6,12 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.1.15", features = ["derive"] }
-tokio = { version = "1", features = ["full"] }
-warp = "0.3"
-slugify = "0.1.0"
-rupnp = "1.1"
+log = "0.4"
+pretty_env_logger = "0.3"
 futures = "0.3"
+tokio = { version = "1", features = ["full"] }
 pin-utils = "0.1"
-http = "0.2"
 xml-rs = "0.8"
+http = "0.2"
+rupnp = "1.1"
+warp = "0.3"
+clap = { version = "3.1.15", features = ["derive"] }
+slugify = "0.1.0"

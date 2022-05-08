@@ -1,8 +1,8 @@
+use log::{info, warn, debug};
 use std::net::{SocketAddr, UdpSocket};
 use warp::Filter;
-use crate::{Error, Result};
-
 use slugify::slugify;
+use crate::{Error, Result};
 
 const DUMMY_PORT: u32 = 0;
 const STREAMING_PORT: u32 = 9000;
@@ -12,6 +12,18 @@ struct MediaFile {
     file_path: std::path::PathBuf,
     host_uri: String,
     file_uri: String
+}
+
+impl std::fmt::Display for MediaFile {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "'{}' @  {}/{}", 
+            self.file_path.display(),
+            self.host_uri, 
+            self.file_uri,
+        )
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,6 +45,9 @@ impl MediaStreamingServer {
             .parse()
             .map_err(|_| Error::StreamingHostParseError(host_ip.to_owned()))?;
 
+        debug!("Streaming server address: {}", server_addr);
+
+        debug!("Creating video file route in streaming server");
         let video_file = match video_path.exists() {
             true => MediaFile {
                 file_path: video_path.clone(),
@@ -44,6 +59,7 @@ impl MediaStreamingServer {
             }
         };
 
+        debug!("Creating subtitle file route in streaming server");
         let subtitle_file = match subtitle_path {
             Some(subtitle_path) => {
                 match subtitle_path.exists() {
@@ -92,15 +108,18 @@ impl MediaStreamingServer {
         let video_route = warp::path(self.video_file.file_uri.to_string())
             .and(warp::fs::file(self.video_file.file_path.clone()));
 
-        println!("Video file: {}/{}", self.video_file.host_uri, self.video_file.file_uri);
+        info!("Video file: {}", self.video_file.file_path.display());
+        debug!("Serving video file: {}", self.video_file);
 
         let subtitle_route = match &self.subtitle_file {
             Some(subtitle_file) => {
-                println!("Subtitle file: {}/{}", subtitle_file.host_uri, subtitle_file.file_uri);
+                info!("Subtitle file: {}", subtitle_file.file_path.display());
+                debug!("Serving subtitle file: {}", subtitle_file);
                 warp::path(subtitle_file.file_uri.to_string())
                     .and(warp::fs::file(subtitle_file.file_path.clone()))
             }
             None => {
+                info!("No subtitle file");
                 warp::path("dummy.srt".to_string())
                     .and(warp::fs::file(self.video_file.file_path.clone()))
             }
@@ -122,6 +141,7 @@ impl MediaStreamingServer {
 }
 
 pub async fn get_serve_ip(target_host: &String) -> Result<String> {
+    debug!("Identifying local serve IP for target host: {}", target_host);
     let target_addr: SocketAddr = format!("{}:{}", target_host, DUMMY_PORT)
         .parse()
         .map_err(|_| Error::StreamingHostParseError(target_host.to_owned()))?;
@@ -137,11 +157,13 @@ pub async fn get_serve_ip(target_host: &String) -> Result<String> {
 }
 
 pub fn infer_subtitle_from_video(video_path: &std::path::PathBuf) -> Option<std::path::PathBuf> {
+    debug!("Inferring subtitle file from video file: {}", video_path.display());
     let infered_subtitle_path = video_path.with_extension("srt");
+    debug!("Inferred subtitle file: {}", infered_subtitle_path.display());
     match infered_subtitle_path.exists() {
         true => Some(infered_subtitle_path),
         false => {
-            println!(
+            warn!(
                 "Tried inferring subtitle file from video file '{}', but it does not exist: '{}'", 
                 video_path.display(),
                 infered_subtitle_path.display()

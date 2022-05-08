@@ -1,7 +1,10 @@
-use crate::devices::Render;
-use crate::streaming::MediaStreamingServer;
+use log::{info, debug};
 use xml::escape::escape_str_attribute;
-use crate::{Error, Result};
+use crate::{
+    devices::Render,
+    streaming::MediaStreamingServer,
+    {Error, Result}
+};
 
 const PAYLOAD_PLAY: &str = r#"
     <InstanceID>0</InstanceID>
@@ -41,6 +44,7 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
         }
         None => "".to_string()
     };
+    debug!("Subtitle payload: '{}'", payload_subtitle);
 
     let payload_setavtransporturi = format!(r#"
         <InstanceID>0</InstanceID>
@@ -50,13 +54,14 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
         streaming_server.video_uri(),
         payload_subtitle
     );
+    debug!("SetAVTransportURI payload: '{}'", payload_setavtransporturi);
 
-    println!("Starting media streaming server...");
+    info!("Starting media streaming server...");
     let streaming_server_handle = tokio::spawn(async move {	
         streaming_server.run().await
     });
 
-    println!("Setting Video URI");
+    info!("Setting Video URI");
     render.service.action(
         render.device.url(), 
         "SetAVTransportURI", 
@@ -65,7 +70,7 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
     .await
     .map_err(|err| Error::DLNASetAVTransportURIError(err))?;
 
-    println!("Playing video");
+    info!("Playing video");
     render.service.action(
         render.device.url(), 
         "Play", 
