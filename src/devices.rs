@@ -12,24 +12,41 @@ pub struct Render {
     pub service: rupnp::Service,
 }
 
+#[derive(Debug, Clone)]
+pub enum RenderSpec {
+    Location(String),
+    Query(u64, String),
+    First(u64),
+}
+
 impl Render {
 
-    async fn from_device(device: rupnp::Device) -> Option<Self> {
-        match device.find_service(&AV_TRANSPORT) {
-            Some(service) => Some(
-                Self{
-                    device: device.clone(),
-                    service: service.clone(),
-                }
-            ),
-            None => {
-                println!("WARNING: No AVTransport service found on {}", device.friendly_name());
-                None
+    pub async fn new(render_spec: RenderSpec) -> Result<Self> {
+        match &render_spec {
+            RenderSpec::Location(device_url) => {
+                println!("Using device: {}", device_url);
+                Self::select_by_url(&device_url).await?
+                    .ok_or(Error::DevicesRenderNotFound(render_spec))
+            },
+            RenderSpec::Query(timeout, device_query) => {
+                println!("Searching device with query: {}", device_query);
+                Self::select_by_query(*timeout, &device_query).await?
+                    .ok_or(Error::DevicesRenderNotFound(render_spec))
+            },
+            RenderSpec::First(timeout) => {
+                println!("Selecting first available device");
+                Ok(
+                    Self::discover(*timeout)
+                        .await?
+                        .first()
+                        .ok_or(Error::DevicesRenderNotFound(render_spec))?
+                        .to_owned()
+                )
             }
         }
     }
 
-    pub async fn find_all(duration_secs: u64) -> Result<Vec<Self>> {
+    pub async fn discover(duration_secs: u64) -> Result<Vec<Self>> {
 
         let search_target = SearchTarget::URN(AV_TRANSPORT);
         let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs))
@@ -50,17 +67,7 @@ impl Render {
         return Ok(renders);
     }
 
-    pub async fn select_by_query(duration_secs: u64, query: &String) -> Result<Option<Self>> {
-        for render in Self::find_all(duration_secs).await? {
-            let render_str = render.to_string();
-            if render_str.contains(query.as_str()) {
-                return Ok(Some(render));
-            }
-        }
-        Ok(None)
-    }
-
-    pub async fn select_by_url(url: &String) -> Result<Option<Self>> {
+    async fn select_by_url(url: &String) -> Result<Option<Self>> {
 
         let uri: Uri = url.parse()
             .map_err(|_| Error::DevicesUrlParseError(url.to_owned()))?;
@@ -70,6 +77,31 @@ impl Render {
             .map_err(|err| Error::DevicesCreateError(url.to_owned(), err))?;
     
         Ok(Self::from_device(device).await)
+    }
+
+    async fn select_by_query(duration_secs: u64, query: &String) -> Result<Option<Self>> {
+        for render in Self::discover(duration_secs).await? {
+            let render_str = render.to_string();
+            if render_str.contains(query.as_str()) {
+                return Ok(Some(render));
+            }
+        }
+        Ok(None)
+    }
+
+    async fn from_device(device: rupnp::Device) -> Option<Self> {
+        match device.find_service(&AV_TRANSPORT) {
+            Some(service) => Some(
+                Self{
+                    device: device.clone(),
+                    service: service.clone(),
+                }
+            ),
+            None => {
+                println!("WARNING: No AVTransport service found on {}", device.friendly_name());
+                None
+            }
+        }
     }
 }
 

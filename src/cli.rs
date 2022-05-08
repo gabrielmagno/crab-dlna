@@ -1,11 +1,10 @@
 use clap::{Args, Parser, Subcommand};
 
 use crate::{
-    devices::Render,
+    devices::{Render, RenderSpec},
     streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video},
     dlna,
-    Result,
-    Error,
+    Result
 };
 
 /// A minimal UPnP/DLNA media streamer
@@ -48,7 +47,7 @@ struct List;
 
 impl List {
     async fn run(&self, cli: &Cli) -> Result<()> {
-        for render in Render::find_all(cli.timeout).await? {
+        for render in Render::discover(cli.timeout).await? {
             println!("{}", render);
         }
         Ok(())
@@ -90,30 +89,18 @@ impl Play {
     }
 
     async fn select_render(&self, cli: &Cli) -> Result<Render> {
-        if let Some(device_url) = &self.device_url {
-            println!("Using device: {}", device_url);
-            Render::select_by_url(device_url).await?
-                .ok_or(
-                    Error::CLIDeviceNotFound(format!("Unable to find device at URL '{}'", device_url))
-                )
-        }
-        else if let Some(device_query) = &self.device_query {
-            println!("Searching device with query: {}", device_query);
-            Render::select_by_query(cli.timeout, device_query).await?
-                .ok_or(
-                    Error::CLIDeviceNotFound(format!("Unable to find any device with query '{}'", device_query))
-                )
-        }
-        else {
-            println!("Selecting first available device");
-            Ok(
-                Render::find_all(cli.timeout)
-                    .await?
-                    .first()
-                    .ok_or(Error::CLIDeviceNotFound("Zero devices found".to_string()))?
-                    .to_owned()
-            )
-        }
+        Render::new(
+            if let Some(device_url) = &self.device_url {
+                RenderSpec::Location(device_url.to_owned())
+            }
+            else if let Some(device_query) = &self.device_query {
+                RenderSpec::Query(cli.timeout, device_query.to_owned())
+            }
+            else {
+                RenderSpec::First(cli.timeout)
+            }
+        )
+        .await
     }
 
     async fn build_media_streaming_server(&self, render: &Render) -> Result<MediaStreamingServer> {

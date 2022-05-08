@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::devices::RenderSpec;
 
 #[derive(Debug)]
 pub enum Error {
@@ -6,6 +7,7 @@ pub enum Error {
     DevicesNextDeviceError(rupnp::Error),
     DevicesUrlParseError(String),
     DevicesCreateError(String, rupnp::Error),
+    DevicesRenderNotFound(RenderSpec),
     StreamingHostParseError(String),
     StreamingFileDoesNotExist(String),
     StreamingRemoteRenderConnectFail(String, std::io::Error),
@@ -13,7 +15,6 @@ pub enum Error {
     DLNASetAVTransportURIError(rupnp::Error),
     DLNAPlayError(rupnp::Error),
     DLNAStreamingError(tokio::task::JoinError),
-    CLIDeviceNotFound(String),
 }
 
 impl fmt::Display for Error {
@@ -28,6 +29,17 @@ impl fmt::Display for Error {
                 url, 
                 err
             ),
+            Error::DevicesRenderNotFound(render_spec) => 
+                match render_spec {
+                    RenderSpec::Location(device_url) => write!(f, "No render found at '{}'", device_url),
+                    RenderSpec::Query(timeout, device_query) => write!(
+                        f,
+                        "No render found withing {} seconds with query '{}'",
+                        timeout,
+                        device_query
+                    ),
+                    RenderSpec::First(timeout) => write!(f, "No render found within {} seconds", timeout),
+                },
             Error::StreamingHostParseError(host) => write!(f, "Failed to parse host '{}'", host),
             Error::StreamingFileDoesNotExist(file) => write!(f, "File '{}' does not exist", file),
             Error::StreamingRemoteRenderConnectFail(host, err) => write!(
@@ -44,7 +56,6 @@ impl fmt::Display for Error {
             Error::DLNASetAVTransportURIError(err) => write!(f, "Failed to set AVTransportURI: {}", err),
             Error::DLNAPlayError(err) => write!(f, "Failed to Play: {}", err),
             Error::DLNAStreamingError(err) => write!(f, "Failed to stream: {}", err),
-            Error::CLIDeviceNotFound(message) => write!(f, "Device not found ({})", message),
         }
     }
 }
