@@ -1,13 +1,14 @@
 use crate::devices::Render;
 use crate::streaming::MediaStreamingServer;
 use xml::escape::escape_str_attribute;
+use crate::{Error, Result};
 
 const PAYLOAD_PLAY: &str = r#"
     <InstanceID>0</InstanceID>
     <Speed>1</Speed>
 "#;
 
-pub async fn play(render: Render, streaming_server: MediaStreamingServer) {
+pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Result<()> {
 
     let subtitle_uri = streaming_server.subtitle_uri();
     let payload_subtitle = match subtitle_uri {
@@ -62,9 +63,7 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) {
         payload_setavtransporturi.as_str()
     )
     .await
-    .unwrap_or_else(
-        |e| panic!("Unable to SetAVTransportURI, error: {}", e)
-    );
+    .map_err(|err| Error::DLNASetAVTransportURIError(err))?;
 
     println!("Playing video");
     render.service.action(
@@ -73,13 +72,11 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) {
         PAYLOAD_PLAY
     )
     .await
-    .unwrap_or_else(
-        |e| panic!("Unable to Play, error: {}", e)
-    );
+    .map_err(|err| Error::DLNAPlayError(err))?;
 
     streaming_server_handle
         .await
-        .unwrap_or_else(
-            |e| panic!("Error while serving the media files: {}", e)
-        );
+        .map_err(|err| Error::DLNAStreamingError(err))?;
+
+    Ok(())
 }

@@ -1,5 +1,6 @@
 use std::net::{SocketAddr, UdpSocket};
 use warp::Filter;
+use crate::{Error, Result};
 
 use slugify::slugify;
 
@@ -26,26 +27,20 @@ impl MediaStreamingServer {
         video_path: &std::path::PathBuf, 
         subtitle_path: &Option<std::path::PathBuf>,
         host_ip: &String,
-    ) -> Self {
+    ) -> Result<Self> {
 
         let server_addr: SocketAddr = format!("{}:{}", host_ip, STREAMING_PORT)
             .parse()
-            .unwrap_or_else(
-                |e| panic!(
-                    "Unable to parse socket address for IP={}, error: {}", 
-                    host_ip,
-                    e
-                )
-            );
+            .map_err(|_| Error::StreamingHostParseError(host_ip.to_owned()))?;
 
         let video_file = match video_path.exists() {
             true => MediaFile {
                 file_path: video_path.clone(),
                 host_uri: format!("http://{}", server_addr),
-                file_uri: slugify!(video_path.as_path().file_name().unwrap().to_str().unwrap(), separator=".")
+                file_uri: slugify!(video_path.display().to_string().as_str(), separator=".")
             },
             false => {
-                panic!("Video file does not exist: {}", video_path.display());
+                return Err(Error::StreamingFileDoesNotExist(video_path.display().to_string()));
             }
         };
 
@@ -55,21 +50,17 @@ impl MediaStreamingServer {
                     true => Some(MediaFile {
                         file_path: subtitle_path.clone(),
                         host_uri: format!("http://{}", server_addr),
-                        file_uri: slugify!(subtitle_path.as_path().file_name().unwrap().to_str().unwrap(), separator=".")
+                        file_uri: slugify!(subtitle_path.display().to_string().as_str(), separator=".")
                     }),
                     false => {
-                        panic!("Subtitle file does not exist: {}", subtitle_path.display());
+                        return Err(Error::StreamingFileDoesNotExist(subtitle_path.display().to_string()));
                     }
                 }
             }
             None => None
         };
 
-        Self {
-            video_file,
-            subtitle_file,
-            server_addr
-        }
+        Ok(Self{video_file, subtitle_file, server_addr})
     }
 
     pub fn video_uri(&self) -> String {
@@ -77,25 +68,23 @@ impl MediaStreamingServer {
     }
 
     pub fn video_type(&self) -> String {
-        self.video_file.file_path.as_path().extension().unwrap().to_str().unwrap().to_string()
+        self.video_file.file_path.as_path().extension()
+            .unwrap_or_default().to_str().unwrap_or_default().to_string()
     }
 
     pub fn subtitle_uri(&self) -> Option<String> {
-        match &self.subtitle_file {
-            Some(subtitle_file) => Some(
-                format!("{}/{}", subtitle_file.host_uri, subtitle_file.file_uri)
-            ),
-            None => None
-        }
+        self.subtitle_file.clone().map(
+            |subtitle_file| 
+            format!("{}/{}", subtitle_file.host_uri, subtitle_file.file_uri)
+        )
     }
 
     pub fn subtitle_type(&self) -> Option<String> {
-        match &self.subtitle_file {
-            Some(subtitle_file) => Some(
-                subtitle_file.file_path.as_path().extension().unwrap().to_str().unwrap().to_string()
-            ),
-            None => None
-        }
+        self.subtitle_file.clone().map(
+            |subtitle_file| 
+            subtitle_file.file_path.as_path().extension()
+                .unwrap_or_default().to_str().unwrap_or_default().to_string()
+        )
     }
 
     fn get_routes(&self) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
@@ -132,33 +121,19 @@ impl MediaStreamingServer {
     }
 }
 
-pub async fn get_serve_ip(target_host: &String) -> String {
+pub async fn get_serve_ip(target_host: &String) -> Result<String> {
     let target_addr: SocketAddr = format!("{}:{}", target_host, DUMMY_PORT)
         .parse()
-        .unwrap_or_else(
-            |e| panic!(
-                "Unable to parse socket address for target host '{}', error: {}", 
-                target_host,
-                e
-            )
-        );
+        .map_err(|_| Error::StreamingHostParseError(target_host.to_owned()))?;
 
-    UdpSocket::bind(target_addr)
-        .unwrap_or_else(
-            |e| panic!(
-                "Failed connecting to the remote render '{}' to identify streaming server adress, error: {}", 
-                target_addr,
-                e
-            )
-        )
-        .local_addr()
-        .unwrap_or_else(
-            |e| panic!(
-                "Failed getting local address, error: {}", e
-            )
-        )
-        .ip()
-        .to_string()
+    Ok(
+        UdpSocket::bind(target_addr)
+            .map_err(|err| Error::StreamingRemoteRenderConnectFail(target_addr.to_string(), err))?
+            .local_addr()
+            .map_err(|err| Error::StreamingIdentifyLocalAddressError(err))?
+            .ip()
+            .to_string()
+    )
 }
 
 pub fn infer_subtitle_from_video(video_path: &std::path::PathBuf) -> Option<std::path::PathBuf> {

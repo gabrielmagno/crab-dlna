@@ -1,8 +1,12 @@
 use clap::{Args, Parser, Subcommand};
 
-use crate::devices::Render;
-use crate::streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video};
-use crate::dlna;
+use crate::{
+    devices::Render,
+    streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video},
+    dlna,
+    Result,
+    Error,
+};
 
 /// A minimal UPnP/DLNA media streamer
 #[derive(Parser)]
@@ -30,11 +34,12 @@ enum Commands {
 }
 
 impl Commands {
-    pub async fn run(&self, cli: &Cli) {
+    pub async fn run(&self, cli: &Cli) -> Result<()> {
         match self {
-            Self::List(list) => list.run(cli).await,
-            Self::Play(play) => play.run(cli).await,
+            Self::List(list) => list.run(cli).await?,
+            Self::Play(play) => play.run(cli).await?,
         }
+        Ok(())
     }
 }
 
@@ -42,10 +47,11 @@ impl Commands {
 struct List;
 
 impl List {
-    async fn run(&self, cli: &Cli) {
-        for render in Render::find_all(cli.timeout).await {
+    async fn run(&self, cli: &Cli) -> Result<()> {
+        for render in Render::find_all(cli.timeout).await? {
             println!("{}", render);
         }
+        Ok(())
     }
 }
 
@@ -77,40 +83,42 @@ struct Play {
 }
 
 impl Play {
-    async fn run(&self, cli: &Cli) {
-        let render = self.select_render(cli).await;
-        let media_streaming_server = self.build_media_streaming_server(&render).await;
-        dlna::play(render, media_streaming_server).await;
+    async fn run(&self, cli: &Cli) -> Result<()> {
+        let render = self.select_render(cli).await?;
+        let media_streaming_server = self.build_media_streaming_server(&render).await?;
+        dlna::play(render, media_streaming_server).await
     }
 
-    async fn select_render(&self, cli: &Cli) -> Render {
+    async fn select_render(&self, cli: &Cli) -> Result<Render> {
         if let Some(device_url) = &self.device_url {
             println!("Using device: {}", device_url);
-            match Render::select_by_url(device_url).await {
-                Some(render) => render,
-                None => { panic!("Unable to find device at URL: {}", device_url); }
-            }
+            Render::select_by_url(device_url).await?
+                .ok_or(
+                    Error::CLIDeviceNotFound(format!("Unable to find device at URL '{}'", device_url))
+                )
         }
         else if let Some(device_query) = &self.device_query {
             println!("Searching device with query: {}", device_query);
-            match Render::select_by_query(cli.timeout, device_query).await {
-                Some(render) => render,
-                None => { panic!("Unable to find device with query: {}", device_query); }
-            }
+            Render::select_by_query(cli.timeout, device_query).await?
+                .ok_or(
+                    Error::CLIDeviceNotFound(format!("Unable to find any device with query '{}'", device_query))
+                )
         }
         else {
             println!("Selecting first available device");
-            Render::find_all(cli.timeout)
-                .await
-                .first()
-                .expect("No device found")
-                .to_owned()
+            Ok(
+                Render::find_all(cli.timeout)
+                    .await?
+                    .first()
+                    .ok_or(Error::CLIDeviceNotFound("Zero devices found".to_string()))?
+                    .to_owned()
+            )
         }
     }
 
-    async fn build_media_streaming_server(&self, render: &Render) -> MediaStreamingServer {
+    async fn build_media_streaming_server(&self, render: &Render) -> Result<MediaStreamingServer> {
         let render_host = render.device.url().authority().unwrap().host().to_string();
-        let local_host_ip = get_serve_ip(&render_host).await;
+        let local_host_ip = get_serve_ip(&render_host).await?;
         let host_ip = self
             .local_host
             .as_ref()
@@ -121,15 +129,17 @@ impl Play {
             true => None
         };
 
-        MediaStreamingServer::new(
-            &self.file_video,
-            &subtitle,
-            &host_ip,
+        Ok(
+            MediaStreamingServer::new(
+                &self.file_video,
+                &subtitle,
+                &host_ip,
+            )?
         )
     }
 }
 
-pub async fn run() {
+pub async fn run() -> Result<()> {
     let cli = Cli::parse();
-    cli.command.run(&cli).await;
+    cli.command.run(&cli).await
 }

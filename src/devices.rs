@@ -2,6 +2,7 @@ use futures::prelude::*;
 use rupnp::ssdp::{SearchTarget, URN};
 use std::time::Duration;
 use http::Uri;
+use crate::{Error, Result};
 
 const AV_TRANSPORT: URN = URN::service("schemas-upnp-org", "AVTransport", 1);
 
@@ -13,7 +14,7 @@ pub struct Render {
 
 impl Render {
 
-    pub async fn from_device(device: rupnp::Device) -> Option<Self> {
+    async fn from_device(device: rupnp::Device) -> Option<Self> {
         match device.find_service(&AV_TRANSPORT) {
             Some(service) => Some(
                 Self{
@@ -28,54 +29,47 @@ impl Render {
         }
     }
 
-    pub async fn find_all(duration_secs: u64) -> Vec<Self> {
+    pub async fn find_all(duration_secs: u64) -> Result<Vec<Self>> {
 
         let search_target = SearchTarget::URN(AV_TRANSPORT);
-        let devices = match rupnp::discover(&search_target, Duration::from_secs(duration_secs)).await {
-            Ok(devices) => devices,
-            Err(e) => panic!("Failed to discover devices, error: {}", e)
-        };
-        
+        let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs))
+            .await
+            .map_err(|err| Error::DevicesDiscoverFail(err))?;
+
         pin_utils::pin_mut!(devices);
     
         let mut renders = Vec::new();
     
-        while let Some(device) = devices.try_next().await.unwrap_or_else(|e| panic!("Failed to get next device, error: {}", e)) {
+        while let Some(device) = devices.try_next().await.map_err(|err| Error::DevicesNextDeviceError(err))? { 
             match Self::from_device(device).await {
                 Some(render) => { renders.push(render); }
                 None => {}
             };
         }
     
-        return renders;
+        return Ok(renders);
     }
 
-    pub async fn select_by_query(duration_secs: u64, query: &String) -> Option<Self> {
-        for render in Self::find_all(duration_secs).await {
+    pub async fn select_by_query(duration_secs: u64, query: &String) -> Result<Option<Self>> {
+        for render in Self::find_all(duration_secs).await? {
             let render_str = render.to_string();
             if render_str.contains(query.as_str()) {
-                return Some(render);
+                return Ok(Some(render));
             }
         }
-        None
+        Ok(None)
     }
 
-    pub async fn select_by_url(url: &String) -> Option<Self> {
+    pub async fn select_by_url(url: &String) -> Result<Option<Self>> {
 
         let uri: Uri = url.parse()
-            .unwrap_or_else(
-                |_|
-                panic!("Failed to parse URL from {}", url)
-            );
+            .map_err(|_| Error::DevicesUrlParseError(url.to_owned()))?;
         
         let device = rupnp::Device::from_url(uri)
             .await
-            .unwrap_or_else(
-                |e|
-                panic!("Failed to retrieve device from {}, error: {}", url, e)
-            );
+            .map_err(|err| Error::DevicesCreateError(url.to_owned(), err))?;
     
-        Self::from_device(device).await
+        Ok(Self::from_device(device).await)
     }
 }
 
