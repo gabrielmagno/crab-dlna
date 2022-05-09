@@ -31,8 +31,8 @@ async fn main() {
 
 # Example: play a video in a render
 
-We can specify a DLNA device render trough a query string, 
-and then play a certain video in it, automatically detecting 
+We can specify a DLNA device render trough a query string,
+and then play a certain video in it, automatically detecting
 the subtitle file.
 
 ```rust
@@ -95,6 +95,6 @@ pub mod cli;
 mod error;
 
 pub use devices::{Render, RenderSpec};
-pub use streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video};
 pub use dlna::play;
 pub use error::Error;
+pub use streaming::{get_serve_ip, infer_subtitle_from_video, MediaStreamingServer};

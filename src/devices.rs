@@ -1,23 +1,21 @@
-use futures::prelude::*;
-use log::{info, warn,debug};
-use std::time::Duration;
-use http::Uri;
-use rupnp::ssdp::{SearchTarget, URN};
 use crate::error::{Error, Result};
+use futures::prelude::*;
+use http::Uri;
+use log::{debug, info, warn};
+use rupnp::ssdp::{SearchTarget, URN};
+use std::time::Duration;
 
 const AV_TRANSPORT: URN = URN::service("schemas-upnp-org", "AVTransport", 1);
 
-macro_rules! format_device{
-    ($device:expr)=>{
-        {
-            format!(
-                "[{}] {} @ {}", 
-                $device.device_type(), 
-                $device.friendly_name(), 
-                $device.url()
-            )
-        }
-    }
+macro_rules! format_device {
+    ($device:expr) => {{
+        format!(
+            "[{}] {} @ {}",
+            $device.device_type(),
+            $device.friendly_name(),
+            $device.url()
+        )
+    }};
 }
 
 /// A DLNA device which is capable of AVTransport actions.
@@ -41,55 +39,61 @@ pub enum RenderSpec {
 }
 
 impl Render {
-
     /// Create a new render from render device specification.
     pub async fn new(render_spec: RenderSpec) -> Result<Self> {
         match &render_spec {
             RenderSpec::Location(device_url) => {
                 info!("Render specified by location: {}", device_url);
-                Self::select_by_url(device_url).await?
+                Self::select_by_url(device_url)
+                    .await?
                     .ok_or(Error::DevicesRenderNotFound(render_spec))
-            },
+            }
             RenderSpec::Query(timeout, device_query) => {
                 info!("Render specified by query: {}", device_query);
-                Self::select_by_query(*timeout, device_query).await?
+                Self::select_by_query(*timeout, device_query)
+                    .await?
                     .ok_or(Error::DevicesRenderNotFound(render_spec))
-            },
+            }
             RenderSpec::First(timeout) => {
                 info!("No render specified, selecting first one");
-                Ok(
-                    Self::discover(*timeout)
-                        .await?
-                        .first()
-                        .ok_or(Error::DevicesRenderNotFound(render_spec))?
-                        .to_owned()
-                )
+                Ok(Self::discover(*timeout)
+                    .await?
+                    .first()
+                    .ok_or(Error::DevicesRenderNotFound(render_spec))?
+                    .to_owned())
             }
         }
     }
 
     /// Discovers DLNA device with AVTransport on the network.
     pub async fn discover(duration_secs: u64) -> Result<Vec<Self>> {
-
-        info!("Discovering devices in the network, waiting {} seconds...", duration_secs);
+        info!(
+            "Discovering devices in the network, waiting {} seconds...",
+            duration_secs
+        );
         let search_target = SearchTarget::URN(AV_TRANSPORT);
         let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs))
             .await
             .map_err(Error::DevicesDiscoverFail)?;
 
         pin_utils::pin_mut!(devices);
-    
-        let mut renders = Vec::new();
-    
 
-        while let Some(device) = devices.try_next().await.map_err(Error::DevicesNextDeviceError)? {
-            debug!("Found device: {}", format_device!(device)); 
+        let mut renders = Vec::new();
+
+        while let Some(device) = devices
+            .try_next()
+            .await
+            .map_err(Error::DevicesNextDeviceError)?
+        {
+            debug!("Found device: {}", format_device!(device));
             match Self::from_device(device).await {
-                Some(render) => { renders.push(render); }
+                Some(render) => {
+                    renders.push(render);
+                }
                 None => {}
             };
         }
-    
+
         Ok(renders)
     }
 
@@ -100,13 +104,14 @@ impl Render {
 
     async fn select_by_url(url: &String) -> Result<Option<Self>> {
         debug!("Selecting device by url: {}", url);
-        let uri: Uri = url.parse()
+        let uri: Uri = url
+            .parse()
             .map_err(|_| Error::DevicesUrlParseError(url.to_owned()))?;
-        
+
         let device = rupnp::Device::from_url(uri)
             .await
             .map_err(|err| Error::DevicesCreateError(url.to_owned(), err))?;
-    
+
         Ok(Self::from_device(device).await)
     }
 
@@ -122,14 +127,15 @@ impl Render {
     }
 
     async fn from_device(device: rupnp::Device) -> Option<Self> {
-        debug!("Retrieving AVTransport service from device '{}'", format_device!(device));
+        debug!(
+            "Retrieving AVTransport service from device '{}'",
+            format_device!(device)
+        );
         match device.find_service(&AV_TRANSPORT) {
-            Some(service) => Some(
-                Self{
-                    device: device.clone(),
-                    service: service.clone(),
-                }
-            ),
+            Some(service) => Some(Self {
+                device: device.clone(),
+                service: service.clone(),
+            }),
             None => {
                 warn!("No AVTransport service found on {}", device.friendly_name());
                 None

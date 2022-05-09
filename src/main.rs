@@ -1,5 +1,5 @@
-use std::process::exit;
 use log::error;
+use std::process::exit;
 
 #[tokio::main]
 async fn main() {

@@ -1,10 +1,10 @@
-use log::{info, debug};
-use xml::escape::escape_str_attribute;
 use crate::{
     devices::Render,
+    error::{Error, Result},
     streaming::MediaStreamingServer,
-    error::{Error, Result}
 };
+use log::{debug, info};
+use xml::escape::escape_str_attribute;
 
 const PAYLOAD_PLAY: &str = r#"
     <InstanceID>0</InstanceID>
@@ -13,7 +13,6 @@ const PAYLOAD_PLAY: &str = r#"
 
 /// Plays a media file in a DLNA compatible device render, according to the render and media streaming server provided
 pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Result<()> {
-
     let subtitle_uri = streaming_server.subtitle_uri();
     let payload_subtitle = match subtitle_uri {
         Some(subtitle_uri) => {
@@ -37,7 +36,7 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
                     </DIDL-Lite>
                     "###,
                     uri_video = streaming_server.video_uri(),
-                    type_video = streaming_server.video_type(), 
+                    type_video = streaming_server.video_type(),
                     uri_sub = subtitle_uri,
                     type_sub = streaming_server.subtitle_type().unwrap_or_else(|| "unknown".to_string())
                 ).as_str()
@@ -47,7 +46,8 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
     };
     debug!("Subtitle payload: '{}'", payload_subtitle);
 
-    let payload_setavtransporturi = format!(r#"
+    let payload_setavtransporturi = format!(
+        r#"
         <InstanceID>0</InstanceID>
         <CurrentURI>{}</CurrentURI>
         <CurrentURIMetaData>{}</CurrentURIMetaData>
@@ -58,27 +58,25 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
     debug!("SetAVTransportURI payload: '{}'", payload_setavtransporturi);
 
     info!("Starting media streaming server...");
-    let streaming_server_handle = tokio::spawn(async move {	
-        streaming_server.run().await
-    });
+    let streaming_server_handle = tokio::spawn(async move { streaming_server.run().await });
 
     info!("Setting Video URI");
-    render.service.action(
-        render.device.url(), 
-        "SetAVTransportURI", 
-        payload_setavtransporturi.as_str()
-    )
-    .await
-    .map_err(Error::DLNASetAVTransportURIError)?;
+    render
+        .service
+        .action(
+            render.device.url(),
+            "SetAVTransportURI",
+            payload_setavtransporturi.as_str(),
+        )
+        .await
+        .map_err(Error::DLNASetAVTransportURIError)?;
 
     info!("Playing video");
-    render.service.action(
-        render.device.url(), 
-        "Play", 
-        PAYLOAD_PLAY
-    )
-    .await
-    .map_err(Error::DLNAPlayError)?;
+    render
+        .service
+        .action(render.device.url(), "Play", PAYLOAD_PLAY)
+        .await
+        .map_err(Error::DLNAPlayError)?;
 
     streaming_server_handle
         .await
