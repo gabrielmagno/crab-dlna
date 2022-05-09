@@ -40,7 +40,7 @@ enum Commands {
 
 impl Commands {
     pub async fn run(&self, cli: &Cli) -> Result<()> {
-        self.setup_log(&cli);
+        self.setup_log(cli);
         match self {
             Self::List(list) => list.run(cli).await?,
             Self::Play(play) => play.run(cli).await?,
@@ -132,16 +132,14 @@ impl Play {
             .unwrap_or(&local_host_ip);
 
         let subtitle = match &self.no_subtitle {
-            false => self.subtitle.clone().or(infer_subtitle_from_video(&self.file_video)),
+            false => self.subtitle.clone().or_else(|| infer_subtitle_from_video(&self.file_video)),
             true => None
         };
 
-        Ok(
-            MediaStreamingServer::new(
-                &self.file_video,
-                &subtitle,
-                &host_ip,
-            )?
+        MediaStreamingServer::new(
+            &self.file_video,
+            &subtitle,
+            host_ip,
         )
     }
 }

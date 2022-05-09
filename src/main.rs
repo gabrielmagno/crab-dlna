@@ -3,11 +3,8 @@ use log::error;
 
 #[tokio::main]
 async fn main() {
-    match crab_dlna::cli::run().await {
-        Err(e) => {
-            error!("{}", e);
-            exit(1);
-        },
-        Ok(()) => (),
+    if let Err(e) = crab_dlna::cli::run().await {
+        error!("{}", e);
+        exit(1);
     }
 }

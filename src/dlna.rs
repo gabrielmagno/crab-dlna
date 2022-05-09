@@ -39,7 +39,7 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
                     uri_video = streaming_server.video_uri(),
                     type_video = streaming_server.video_type(), 
                     uri_sub = subtitle_uri,
-                    type_sub = streaming_server.subtitle_type().unwrap_or("unknown".to_string())
+                    type_sub = streaming_server.subtitle_type().unwrap_or_else(|| "unknown".to_string())
                 ).as_str()
            ).to_string()
         }
@@ -69,7 +69,7 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
         payload_setavtransporturi.as_str()
     )
     .await
-    .map_err(|err| Error::DLNASetAVTransportURIError(err))?;
+    .map_err(Error::DLNASetAVTransportURIError)?;
 
     info!("Playing video");
     render.service.action(
@@ -78,11 +78,11 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
         PAYLOAD_PLAY
     )
     .await
-    .map_err(|err| Error::DLNAPlayError(err))?;
+    .map_err(Error::DLNAPlayError)?;
 
     streaming_server_handle
         .await
-        .map_err(|err| Error::DLNAStreamingError(err))?;
+        .map_err(Error::DLNAStreamingError)?;
 
     Ok(())
 }

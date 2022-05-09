@@ -47,12 +47,12 @@ impl Render {
         match &render_spec {
             RenderSpec::Location(device_url) => {
                 info!("Render specified by location: {}", device_url);
-                Self::select_by_url(&device_url).await?
+                Self::select_by_url(device_url).await?
                     .ok_or(Error::DevicesRenderNotFound(render_spec))
             },
             RenderSpec::Query(timeout, device_query) => {
                 info!("Render specified by query: {}", device_query);
-                Self::select_by_query(*timeout, &device_query).await?
+                Self::select_by_query(*timeout, device_query).await?
                     .ok_or(Error::DevicesRenderNotFound(render_spec))
             },
             RenderSpec::First(timeout) => {
@@ -75,14 +75,14 @@ impl Render {
         let search_target = SearchTarget::URN(AV_TRANSPORT);
         let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs))
             .await
-            .map_err(|err| Error::DevicesDiscoverFail(err))?;
+            .map_err(Error::DevicesDiscoverFail)?;
 
         pin_utils::pin_mut!(devices);
     
         let mut renders = Vec::new();
     
 
-        while let Some(device) = devices.try_next().await.map_err(|err| Error::DevicesNextDeviceError(err))? {
+        while let Some(device) = devices.try_next().await.map_err(Error::DevicesNextDeviceError)? {
             debug!("Found device: {}", format_device!(device)); 
             match Self::from_device(device).await {
                 Some(render) => { renders.push(render); }
@@ -90,7 +90,7 @@ impl Render {
             };
         }
     
-        return Ok(renders);
+        Ok(renders)
     }
 
     /// Returns the host of the render

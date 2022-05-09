@@ -39,7 +39,7 @@ impl MediaStreamingServer {
 
     /// Create a new media streaming server
     pub fn new(
-        video_path: &std::path::PathBuf, 
+        video_path: &std::path::Path, 
         subtitle_path: &Option<std::path::PathBuf>,
         host_ip: &String,
     ) -> Result<Self> {
@@ -53,7 +53,7 @@ impl MediaStreamingServer {
         debug!("Creating video file route in streaming server");
         let video_file = match video_path.exists() {
             true => MediaFile {
-                file_path: video_path.clone(),
+                file_path: video_path.to_path_buf(),
                 host_uri: format!("http://{}", server_addr),
                 file_uri: slugify!(video_path.display().to_string().as_str(), separator=".")
             },
@@ -110,6 +110,7 @@ impl MediaStreamingServer {
         )
     }
 
+    #[allow(clippy::unnecessary_to_owned)]
     fn get_routes(&self) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
 
         let video_route = warp::path(self.video_file.file_uri.to_string())
@@ -132,11 +133,11 @@ impl MediaStreamingServer {
             }
         };
 
-        return warp::get()
+         warp::get()
             .and(
                 video_route
                 .or(subtitle_route)
-            );
+            )
     }
 
     /// Start the media streaming server.
@@ -159,14 +160,14 @@ pub async fn get_serve_ip(target_host: &String) -> Result<String> {
         UdpSocket::bind(target_addr)
             .map_err(|err| Error::StreamingRemoteRenderConnectFail(target_addr.to_string(), err))?
             .local_addr()
-            .map_err(|err| Error::StreamingIdentifyLocalAddressError(err))?
+            .map_err(Error::StreamingIdentifyLocalAddressError)?
             .ip()
             .to_string()
     )
 }
 
 /// Infer the subtitle file path from the video file path.
-pub fn infer_subtitle_from_video(video_path: &std::path::PathBuf) -> Option<std::path::PathBuf> {
+pub fn infer_subtitle_from_video(video_path: &std::path::Path) -> Option<std::path::PathBuf> {
     debug!("Inferring subtitle file from video file: {}", video_path.display());
     let infered_subtitle_path = video_path.with_extension("srt");
     debug!("Inferred subtitle file: {}", infered_subtitle_path.display());
