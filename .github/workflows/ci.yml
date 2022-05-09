@@ -13,7 +13,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       - name: Install rust toolchain (stable)
         uses: actions-rs/toolchain@v1
@@ -40,7 +40,7 @@ jobs:
           args: --all -- --check
 
       - name: Build   
-      - uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --all-features
