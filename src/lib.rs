@@ -35,7 +35,7 @@ We can specify a DLNA device render trough a query string,
 and then play a certain video in it, automatically detecting
 the subtitle file.
 
-```rust
+```rust,no_run
 use std::path::PathBuf;
 use crab_dlna::{
     Render,

@@ -1,13 +1,7 @@
-use std::path::PathBuf;
 use crab_dlna::{
-    Render,
-    RenderSpec,
-    MediaStreamingServer,
-    get_serve_ip,
-    infer_subtitle_from_video,
-    Error,
-    play,
+    get_serve_ip, infer_subtitle_from_video, play, Error, MediaStreamingServer, Render, RenderSpec,
 };
+use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -17,10 +11,7 @@ async fn main() -> Result<(), Error> {
     let host_ip = get_serve_ip(&render.host()).await?;
     let video_path = PathBuf::from("/home/crab/Videos/my_video.mp4");
     let inferred_subtitle_path = infer_subtitle_from_video(&video_path);
-    let media_streaming_server = MediaStreamingServer::new(
-        &video_path,
-        &inferred_subtitle_path,
-        &host_ip,
-    )?;
+    let media_streaming_server =
+        MediaStreamingServer::new(&video_path, &inferred_subtitle_path, &host_ip)?;
     play(render, media_streaming_server).await
 }
