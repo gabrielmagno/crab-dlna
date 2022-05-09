@@ -3,7 +3,7 @@ use xml::escape::escape_str_attribute;
 use crate::{
     devices::Render,
     streaming::MediaStreamingServer,
-    {Error, Result}
+    error::{Error, Result}
 };
 
 const PAYLOAD_PLAY: &str = r#"
@@ -11,6 +11,7 @@ const PAYLOAD_PLAY: &str = r#"
     <Speed>1</Speed>
 "#;
 
+/// Plays a media file in a DLNA compatible device render, according to the render and media streaming server provided
 pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Result<()> {
 
     let subtitle_uri = streaming_server.subtitle_uri();

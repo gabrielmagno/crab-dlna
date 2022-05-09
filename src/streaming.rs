@@ -2,13 +2,14 @@ use log::{info, warn, debug};
 use std::net::{SocketAddr, UdpSocket};
 use warp::Filter;
 use slugify::slugify;
-use crate::{Error, Result};
+use crate::error::{Error, Result};
 
 const DUMMY_PORT: u32 = 0;
 const STREAMING_PORT: u32 = 9000;
 
+/// A media file to stream
 #[derive(Debug, Clone)]
-struct MediaFile {
+pub struct MediaFile {
     file_path: std::path::PathBuf,
     host_uri: String,
     file_uri: String
@@ -26,6 +27,7 @@ impl std::fmt::Display for MediaFile {
     }
 }
 
+/// A media streaming server
 #[derive(Debug, Clone)]
 pub struct MediaStreamingServer {
     video_file: MediaFile,
@@ -35,6 +37,7 @@ pub struct MediaStreamingServer {
 
 impl MediaStreamingServer {
 
+    /// Create a new media streaming server
     pub fn new(
         video_path: &std::path::PathBuf, 
         subtitle_path: &Option<std::path::PathBuf>,
@@ -79,15 +82,18 @@ impl MediaStreamingServer {
         Ok(Self{video_file, subtitle_file, server_addr})
     }
 
+    #[doc(hidden)]
     pub fn video_uri(&self) -> String {
         format!("{}/{}", self.video_file.host_uri, self.video_file.file_uri)
     }
 
+    #[doc(hidden)]
     pub fn video_type(&self) -> String {
         self.video_file.file_path.as_path().extension()
             .unwrap_or_default().to_str().unwrap_or_default().to_string()
     }
 
+    #[doc(hidden)]
     pub fn subtitle_uri(&self) -> Option<String> {
         self.subtitle_file.clone().map(
             |subtitle_file| 
@@ -95,6 +101,7 @@ impl MediaStreamingServer {
         )
     }
 
+    #[doc(hidden)]
     pub fn subtitle_type(&self) -> Option<String> {
         self.subtitle_file.clone().map(
             |subtitle_file| 
@@ -132,6 +139,7 @@ impl MediaStreamingServer {
             );
     }
 
+    /// Start the media streaming server.
     pub async fn run(&self) {
         let streaming_routes = self.get_routes();
         warp::serve(streaming_routes)
@@ -140,6 +148,7 @@ impl MediaStreamingServer {
     }
 }
 
+/// Identifies the local serve IP address according to a target host.
 pub async fn get_serve_ip(target_host: &String) -> Result<String> {
     debug!("Identifying local serve IP for target host: {}", target_host);
     let target_addr: SocketAddr = format!("{}:{}", target_host, DUMMY_PORT)
@@ -156,6 +165,7 @@ pub async fn get_serve_ip(target_host: &String) -> Result<String> {
     )
 }
 
+/// Infer the subtitle file path from the video file path.
 pub fn infer_subtitle_from_video(video_path: &std::path::PathBuf) -> Option<std::path::PathBuf> {
     debug!("Inferring subtitle file from video file: {}", video_path.display());
     let infered_subtitle_path = video_path.with_extension("srt");

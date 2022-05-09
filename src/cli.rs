@@ -6,7 +6,7 @@ use crate::{
     devices::{Render, RenderSpec},
     streaming::{MediaStreamingServer, get_serve_ip, infer_subtitle_from_video},
     dlna,
-    Result
+    error::Result
 };
 
 /// A minimal UPnP/DLNA media streamer
@@ -77,7 +77,7 @@ impl List {
 struct Play {
     /// The hostname or IP to be used to host and serve the files (if not provided we derive it from the local network address)
     #[clap(short='H', long="host")]
-    local_host: Option<String>,
+    host: Option<String>,
 
     /// Specify the device where to play through a query (scan devices before playing)
     #[clap(short='q', long="query-device")]
@@ -125,10 +125,9 @@ impl Play {
 
     async fn build_media_streaming_server(&self, render: &Render) -> Result<MediaStreamingServer> {
         info!("Building media streaming server");
-        let render_host = render.device.url().authority().unwrap().host().to_string();
-        let local_host_ip = get_serve_ip(&render_host).await?;
+        let local_host_ip = get_serve_ip(&render.host()).await?;
         let host_ip = self
-            .local_host
+            .host
             .as_ref()
             .unwrap_or(&local_host_ip);
 
@@ -147,6 +146,7 @@ impl Play {
     }
 }
 
+/// Run the CLI application
 pub async fn run() -> Result<()> {
     let cli = Cli::parse();
     cli.command.run(&cli).await

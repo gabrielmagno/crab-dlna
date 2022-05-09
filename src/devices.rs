@@ -3,7 +3,7 @@ use log::{info, warn,debug};
 use std::time::Duration;
 use http::Uri;
 use rupnp::ssdp::{SearchTarget, URN};
-use crate::{Error, Result};
+use crate::error::{Error, Result};
 
 const AV_TRANSPORT: URN = URN::service("schemas-upnp-org", "AVTransport", 1);
 
@@ -20,21 +20,29 @@ macro_rules! format_device{
     }
 }
 
+/// A DLNA device which is capable of AVTransport actions.
 #[derive(Debug, Clone)]
 pub struct Render {
+    /// The UPnP device
     pub device: rupnp::Device,
+    /// The AVTransport service
     pub service: rupnp::Service,
 }
 
+/// An specification of a DLNA render device.
 #[derive(Debug, Clone)]
 pub enum RenderSpec {
+    /// Render specified by a location URL
     Location(String),
+    /// Render specified by a query string
     Query(u64, String),
+    /// The first render found
     First(u64),
 }
 
 impl Render {
 
+    /// Create a new render from render device specification.
     pub async fn new(render_spec: RenderSpec) -> Result<Self> {
         match &render_spec {
             RenderSpec::Location(device_url) => {
@@ -60,6 +68,7 @@ impl Render {
         }
     }
 
+    /// Discovers DLNA device with AVTransport on the network.
     pub async fn discover(duration_secs: u64) -> Result<Vec<Self>> {
 
         info!("Discovering devices in the network, waiting {} seconds...", duration_secs);
@@ -82,6 +91,11 @@ impl Render {
         }
     
         return Ok(renders);
+    }
+
+    /// Returns the host of the render
+    pub fn host(&self) -> String {
+        self.device.url().authority().unwrap().host().to_string()
     }
 
     async fn select_by_url(url: &String) -> Result<Option<Self>> {

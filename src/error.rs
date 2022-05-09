@@ -1,19 +1,32 @@
 use std::fmt;
 use crate::devices::RenderSpec;
 
+/// Errors that can happen inside crab-dlna
 #[derive(Debug)]
 pub enum Error {
+    /// An error occurred while discovering devices
     DevicesDiscoverFail(rupnp::Error),
+    /// An error occurred while iterating over discovered devices
     DevicesNextDeviceError(rupnp::Error),
+    /// An error occurred while parsing a device URL
     DevicesUrlParseError(String),
+    /// An error occurred while parsing and creating a device
     DevicesCreateError(String, rupnp::Error),
+    /// An error occurred when the specified render is not found
     DevicesRenderNotFound(RenderSpec),
+    /// An error occurred parsing a host or IP address
     StreamingHostParseError(String),
+    /// An error occurred when a certain media file does not exist
     StreamingFileDoesNotExist(String),
+    /// An error occurred while trying to connect to the render
     StreamingRemoteRenderConnectFail(String, std::io::Error),
+    /// An error occurred while trying to identify the host IP address
     StreamingIdentifyLocalAddressError(std::io::Error),
+    /// An error occurred while sending the SetAVTransportURI DLNA action to the render
     DLNASetAVTransportURIError(rupnp::Error),
+    /// An error occurred while sending the Play DLNA action to the render
     DLNAPlayError(rupnp::Error),
+    /// An error occurred while serving and streaming the media files
     DLNAStreamingError(tokio::task::JoinError),
 }
 
