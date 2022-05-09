@@ -1,14 +1,17 @@
+name: Continuous Integration
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-name: build
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  check:
-    name: Rust project
+  build_and_test:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
 
