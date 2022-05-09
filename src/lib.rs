@@ -12,40 +12,7 @@ This crate provides both a library and a command line tool.
  - Streaming audio
  - Streaming video, with subtitle support
 
-# Usage (CLI)
-
-## List
-
-Scan compatible devices and list the available ones:
-```bash
-crab-dlna list
-```
-
-If your device is not being listed, you might need to increase the search timeout:
-```bash
-crab-dlna -t 20 list
-```
-
-## Play
-
-Play a video, automatically loading the subtitles if available, selecting a random device:
-```bash
-crab-dlna play That.Movie.mkv
-```
-
-Play a video, specifying the device through query (scan devices before playing):
-```bash
-crab-dlna play That.Movie.mkv -q "osmc"
-```
-
-Play a video, specifying the device through its exact location (no scan, faster):
-```bash
-crab-dlna play That.Movie.mkv -d "http://192.168.1.13:1082/"
-```
-
-# Usage (library)
-
-## Example: discover and list devices
+# Example: discover and list devices
 
 crab-dlna provides a function to discover a list devices in the network.
 
@@ -62,7 +29,7 @@ async fn main() {
 }
 ```
 
-## Example: play a video in a render
+# Example: play a video in a render
 
 We can specify a DLNA device render trough a query string, 
 and then play a certain video in it, automatically detecting 

@@ -1,15 +1,28 @@
 # crab-dlna
 
-crab-dlna is a minimal UPnP/DLNA media streamer.
+crab-dlna is a minimal UPnP/DLNA media streamer, available both as a standlone CLI (command line interface) application and a Rust library.
 
 It allows you to play a local video file in your TV (or any other DLNA compatible device).
-
-This crate provides both a library and a command line tool.
 
 ## Features
  - Searching available DLNA devices in the local network
  - Streaming audio
  - Streaming video, with subtitle support
+
+## Installation
+
+### cargo
+
+Installation via cargo is done by installing the `crab-dlna` crate:
+```bash
+# If required, update Rust on the stable channel
+rustup update stable
+
+cargo install crab-dlna
+
+# Alternatively, --locked may be required due to how cargo install works
+cargo install crab-dlna --locked
+```
 
 ## Usage (CLI)
 
@@ -44,6 +57,13 @@ crab-dlna play That.Movie.mkv -d "http://192.168.1.13:1082/"
 
 ## Usage (library)
 
+Add `crab-dlna` and `tokio` to your dependencies:
+```toml
+[dependencies] 
+tokio = { version = "1", features = ["full"] }
+crab-dlna = "0.1"
+```
+
 ### Example: discover and list devices
 
 crab-dlna provides a function to discover a list devices in the network.
@@ -61,7 +81,7 @@ async fn main() {
 }
 ```
 
-### Example: play a video in a render
+### Example: play a video in a device
 
 We can specify a DLNA device render trough a query string, 
 and then play a certain video in it, automatically detecting 
@@ -95,17 +115,3 @@ async fn main() -> Result<(), Error> {
     play(render, media_streaming_server).await
 }
 ```
-
-## Technical Details
-
-crab-dlna is basically a one-file DLNA MediaServer and a self DLNA MediaController.
-
-How does `list` work?
-1. Issue an SSDP M-Search broadcast message in the network
-2. Capture the responses and register the devices
-3. Filter only devices that provide [UPnP's AVTransport service](http://www.upnp.org/specs/av/UPnP-av-AVTransport-v3-Service-20101231.pdf)
-
-How does `play` work?
-1. Setup an HTTP server to provide the media files to be streamed (including subtitles)
-2. Send a `SetAVTransportURI` message to the device, specifying the HTTP URLs of the media files
-3. Send a `Play` message to the device
