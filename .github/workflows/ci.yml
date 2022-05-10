@@ -65,7 +65,7 @@ jobs:
         with:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
-          args: --locked --release --al-features --target=${{ matrix.job.target }}
+          args: --locked --release --all-features --target=${{ matrix.job.target }}
 
       - name: Run tests
         uses: actions-rs/cargo@v1
