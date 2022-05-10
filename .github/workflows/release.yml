@@ -1,10 +1,15 @@
+name: Create binaries for GitHub release
+
 on:
   release:
     types: [created]
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   release:
-    name: release ${{ matrix.target }}
+    name: Create binary for ${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -17,7 +22,10 @@ jobs:
           - target: x86_64-apple-darwin
             archive: zip
     steps:
-      - uses: actions/checkout@master
+
+      - name: Checkout repository
+        uses: actions/checkout@master
+
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.3.2
         env:
