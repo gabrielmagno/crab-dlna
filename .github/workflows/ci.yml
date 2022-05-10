@@ -39,6 +39,7 @@ jobs:
       - name: Install rust toolchain (stable)
         uses: actions-rs/toolchain@v1
         with:
+            target: ${{ matrix.job.target }}
             toolchain: stable
             override: true
             components: rustfmt, clippy
