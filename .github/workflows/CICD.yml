@@ -181,9 +181,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Get current rust app version from its Cargo.toml
-        id: version
-        uses: dante-signal31/rust-app-version@v1.0.0
+      - name: Create GitHub release from rust cargo
+        id: create_rust_release
+        uses: gabrielmagno/rust-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download release artifacts
         uses: actions/download-artifact@v3
@@ -191,9 +193,11 @@ jobs:
           name: release-artifacts
           path: downloaded-release-artifacts
 
-      - name: Upload release binaries
-        uses: softprops/action-gh-release@v1
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          tag_name: v${{ steps.version.outputs.app_version }}
-          body: "crab-dlna v${{ steps.version.outputs.app_version }}"
-          files: downloaded-release-artifacts/*
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: downloaded-release-artifacts/*
+          tag: ${{ steps.create_rust_release.outputs.tag_name }}
+          overwrite: true
+          file_glob: true
