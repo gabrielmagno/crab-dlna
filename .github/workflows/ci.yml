@@ -79,7 +79,7 @@ jobs:
         with:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
-          args: --locked --release --all-features --target=${{ matrix.job.target }}
+          args: --release --all-features --target=${{ matrix.job.target }}
 
       - name: Get current rust app version from its Cargo.toml
         id: version
