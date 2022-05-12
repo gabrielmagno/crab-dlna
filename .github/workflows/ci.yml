@@ -84,7 +84,7 @@ jobs:
       - name: Get current rust app version from its Cargo.toml
         id: version
         if: steps.is-release.outputs.IS_RELEASE
-        uses: dante-signal31/rust-app-version@v1
+        uses: dante-signal31/rust-app-version@v1.0.0
 
       - name: Extract crate information
         if: steps.is-release.outputs.IS_RELEASE
@@ -183,7 +183,7 @@ jobs:
 
       - name: Get current rust app version from its Cargo.toml
         id: version
-        uses: dante-signal31/rust-app-version@v1
+        uses: dante-signal31/rust-app-version@v1.0.0
 
       - name: Download release artifacts
         uses: actions/download-artifact@v3
