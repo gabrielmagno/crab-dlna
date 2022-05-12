@@ -109,12 +109,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release archive
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload release binaries
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ steps.create_rust_release.outputs.upload_url }}
-          asset_path: output
-          asset_name: output
-          asset_content_type: application/octet-stream
+          files: output/*
+
+      # - name: Upload release archive
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_rust_release.outputs.upload_url }}
+      #     asset_path: output
+      #     asset_name: output
+      #     asset_content_type: application/octet-stream
