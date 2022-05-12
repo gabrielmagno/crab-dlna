@@ -14,74 +14,74 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-and-test:
+  # build-and-test:
 
-    name: Build and Test - ${{ matrix.job.os }} (${{ matrix.job.target }})
-    runs-on: ${{ matrix.job.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        job:
-          - { os: ubuntu-20.04, target: arm-unknown-linux-gnueabihf , use-cross: true }
-          - { os: ubuntu-20.04, target: arm-unknown-linux-musleabihf, use-cross: true }
-          - { os: ubuntu-20.04, target: aarch64-unknown-linux-gnu   , use-cross: true }
-          - { os: ubuntu-20.04, target: i686-unknown-linux-gnu      , use-cross: true }
-          - { os: ubuntu-20.04, target: i686-unknown-linux-musl     , use-cross: true }
-          - { os: ubuntu-20.04, target: x86_64-unknown-linux-gnu    }
-          - { os: ubuntu-20.04, target: x86_64-unknown-linux-musl   , use-cross: true }
-          - { os: macos-10.15 , target: x86_64-apple-darwin         }
-          # - { os: windows-2019, target: i686-pc-windows-gnu         }  ## disabled; error: linker `i686-w64-mingw32-gcc` not found
-          - { os: windows-2019, target: i686-pc-windows-msvc        }
-          - { os: windows-2019, target: x86_64-pc-windows-gnu       }
-          - { os: windows-2019, target: x86_64-pc-windows-msvc      }
+  #   name: Build and Test - ${{ matrix.job.os }} (${{ matrix.job.target }})
+  #   runs-on: ${{ matrix.job.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       job:
+  #         - { os: ubuntu-20.04, target: arm-unknown-linux-gnueabihf , use-cross: true }
+  #         - { os: ubuntu-20.04, target: arm-unknown-linux-musleabihf, use-cross: true }
+  #         - { os: ubuntu-20.04, target: aarch64-unknown-linux-gnu   , use-cross: true }
+  #         - { os: ubuntu-20.04, target: i686-unknown-linux-gnu      , use-cross: true }
+  #         - { os: ubuntu-20.04, target: i686-unknown-linux-musl     , use-cross: true }
+  #         - { os: ubuntu-20.04, target: x86_64-unknown-linux-gnu    }
+  #         - { os: ubuntu-20.04, target: x86_64-unknown-linux-musl   , use-cross: true }
+  #         - { os: macos-10.15 , target: x86_64-apple-darwin         }
+  #         # - { os: windows-2019, target: i686-pc-windows-gnu         }  ## disabled; error: linker `i686-w64-mingw32-gcc` not found
+  #         - { os: windows-2019, target: i686-pc-windows-msvc        }
+  #         - { os: windows-2019, target: x86_64-pc-windows-gnu       }
+  #         - { os: windows-2019, target: x86_64-pc-windows-msvc      }
 
-    steps:
+  #   steps:
 
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-      - name: Install rust toolchain (stable)
-        uses: actions-rs/toolchain@v1
-        with:
-            target: ${{ matrix.job.target }}
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
+  #     - name: Install rust toolchain (stable)
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #           target: ${{ matrix.job.target }}
+  #           toolchain: stable
+  #           override: true
+  #           components: rustfmt, clippy
 
-      - name: Check syntax with `cargo check`
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
+  #     - name: Check syntax with `cargo check`
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: check
 
-      - name: Check good practices with `cargo clippy`
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --locked --all-targets --all-features
+  #     - name: Check good practices with `cargo clippy`
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: clippy
+  #         args: --locked --all-targets --all-features
 
-      - name: Check formatting with `cargo fmt`
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+  #     - name: Check formatting with `cargo fmt`
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: fmt
+  #         args: --all -- --check
 
-      - name: Build   
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: ${{ matrix.job.use-cross }}
-          command: build
-          args: --locked --release --all-features --target=${{ matrix.job.target }}
+  #     - name: Build   
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         use-cross: ${{ matrix.job.use-cross }}
+  #         command: build
+  #         args: --locked --release --all-features --target=${{ matrix.job.target }}
 
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --locked
+  #     - name: Run tests
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: test
+  #         args: --locked
 
   github-release:
 
     name: Create GitHub release
-    needs: build-and-test
+    #needs: build-and-test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
