@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: Continuous Integration and Delivery
 
 on:
   push:
@@ -14,7 +14,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-and-test:
+  test-build-package:
 
     name: Build and Test - ${{ matrix.job.os }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
@@ -23,13 +23,13 @@ jobs:
       matrix:
         job:
           - { os: ubuntu-20.04, target: x86_64-unknown-linux-musl      , use-cross: true }
-          # - { os: ubuntu-20.04, target: i686-unknown-linux-musl        , use-cross: true }
-          # - { os: ubuntu-20.04, target: arm-unknown-linux-musleabihf   , use-cross: true }
-          # - { os: ubuntu-20.04, target: armv7-unknown-linux-musleabihf , use-cross: true }
-          # - { os: macos-10.15 , target: x86_64-apple-darwin            }
-          # - { os: macos-10.15 , target: i686-apple-darwin              }
-          # - { os: windows-2019, target: x86_64-pc-windows-msvc         }
-          # - { os: windows-2019, target: i686-pc-windows-msvc           }
+          - { os: ubuntu-20.04, target: i686-unknown-linux-musl        , use-cross: true }
+          - { os: ubuntu-20.04, target: arm-unknown-linux-musleabihf   , use-cross: true }
+          - { os: ubuntu-20.04, target: armv7-unknown-linux-musleabihf , use-cross: true }
+          - { os: macos-10.15 , target: x86_64-apple-darwin            }
+          - { os: macos-10.15 , target: i686-apple-darwin              }
+          - { os: windows-2019, target: x86_64-pc-windows-msvc         }
+          - { os: windows-2019, target: i686-pc-windows-msvc           }
 
     steps:
 
@@ -172,7 +172,7 @@ jobs:
   github-release:
 
     name: Create GitHub release
-    needs: build-and-test
+    needs: test-build-package
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
@@ -194,5 +194,6 @@ jobs:
       - name: Upload release binaries
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.app_version }}
+          tag_name: v${{ steps.version.outputs.app_version }}
+          body: "crab-dlna v${{ steps.version.outputs.app_version }}"
           files: downloaded-release-artifacts/*
