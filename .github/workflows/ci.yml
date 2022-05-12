@@ -97,26 +97,41 @@ jobs:
           echo "This is file 1" > output/file-1.txt
           echo "This is file 2" > output/file-2.txt
 
-      # - name: "Artifact upload: tarball"
-      #   uses: actions/upload-artifact@master
-      #   with:
-      #     name: output
-      #     path: output
-
-      - name: Create GitHub release from rust cargo
-        id: create_rust_release
-        uses: gabrielmagno/rust-release@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload File 1
+        uses: actions/upload-artifact@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: output/*
-          tag: ${{ steps.create_rust_release.outputs.tag_name }}
-          overwrite: true
-          file_glob: true
+          name: binaries/
+          path: output/file-1.txt
+
+      - name: Upload File 2
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries/
+          path: output/file-1.txt
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries/
+          path: downloaded-binaries/
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: downloaded-binaries/
+        
+      # - name: Create GitHub release from rust cargo
+      #   id: create_rust_release
+      #   uses: gabrielmagno/rust-release@master
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Upload binaries to release
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     file: output/*
+      #     tag: ${{ steps.create_rust_release.outputs.tag_name }}
+      #     overwrite: true
+      #     file_glob: true
 
       # - name: Upload release binaries
       #   uses: softprops/action-gh-release@v1
