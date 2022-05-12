@@ -114,7 +114,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: output/*
-          tag: ${{ steps.create_rust_release.outputs.version }}
+          tag: ${{ steps.create_rust_release.outputs.tag_name }}
           overwrite: true
           file_glob: true
 
