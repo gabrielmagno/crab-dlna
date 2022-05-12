@@ -16,183 +16,183 @@ env:
 jobs:
   build-and-test:
 
-    - name: Build and Test - ${{ matrix.job.os }} (${{ matrix.job.target }})
-      runs-on: ${{ matrix.job.os }}
-      strategy:
-        fail-fast: false
-        matrix:
-          job:
-            - { os: ubuntu-20.04, target: x86_64-unknown-linux-musl      , use-cross: true }
-            # - { os: ubuntu-20.04, target: i686-unknown-linux-musl        , use-cross: true }
-            # - { os: ubuntu-20.04, target: arm-unknown-linux-musleabihf   , use-cross: true }
-            # - { os: ubuntu-20.04, target: armv7-unknown-linux-musleabihf , use-cross: true }
-            # - { os: macos-10.15 , target: x86_64-apple-darwin            }
-            # - { os: macos-10.15 , target: i686-apple-darwin              }
-            # - { os: windows-2019, target: x86_64-pc-windows-msvc         }
-            # - { os: windows-2019, target: i686-pc-windows-msvc           }
+    name: Build and Test - ${{ matrix.job.os }} (${{ matrix.job.target }})
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { os: ubuntu-20.04, target: x86_64-unknown-linux-musl      , use-cross: true }
+          # - { os: ubuntu-20.04, target: i686-unknown-linux-musl        , use-cross: true }
+          # - { os: ubuntu-20.04, target: arm-unknown-linux-musleabihf   , use-cross: true }
+          # - { os: ubuntu-20.04, target: armv7-unknown-linux-musleabihf , use-cross: true }
+          # - { os: macos-10.15 , target: x86_64-apple-darwin            }
+          # - { os: macos-10.15 , target: i686-apple-darwin              }
+          # - { os: windows-2019, target: x86_64-pc-windows-msvc         }
+          # - { os: windows-2019, target: i686-pc-windows-msvc           }
 
-      steps:
+    steps:
 
-        - name: Checkout repository
-          uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-        - name: Check for release
-          id: is-release
-          shell: bash
-          run: |
-            unset IS_RELEASE ; if [[ $GITHUB_REF = "refs/heads/main" ]]; then IS_RELEASE='true' ; fi
-            echo ::set-output name=IS_RELEASE::${IS_RELEASE}
+      - name: Check for release
+        id: is-release
+        shell: bash
+        run: |
+          unset IS_RELEASE ; if [[ $GITHUB_REF = "refs/heads/main" ]]; then IS_RELEASE='true' ; fi
+          echo ::set-output name=IS_RELEASE::${IS_RELEASE}
 
-        - name: Install rust toolchain (stable)
-          uses: actions-rs/toolchain@v1
-          with:
-              target: ${{ matrix.job.target }}
-              toolchain: stable
-              override: true
-              components: rustfmt, clippy
+      - name: Install rust toolchain (stable)
+        uses: actions-rs/toolchain@v1
+        with:
+            target: ${{ matrix.job.target }}
+            toolchain: stable
+            override: true
+            components: rustfmt, clippy
 
-        # - name: Check syntax with `cargo check`
-        #   uses: actions-rs/cargo@v1
-        #   with:
-        #     command: check
+      # - name: Check syntax with `cargo check`
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: check
 
-        # - name: Check good practices with `cargo clippy`
-        #   uses: actions-rs/cargo@v1
-        #   with:
-        #     command: clippy
-        #     args: --locked --all-targets --all-features
+      # - name: Check good practices with `cargo clippy`
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: clippy
+      #     args: --locked --all-targets --all-features
 
-        # - name: Check formatting with `cargo fmt`
-        #   uses: actions-rs/cargo@v1
-        #   with:
-        #     command: fmt
-        #     args: --all -- --check
+      # - name: Check formatting with `cargo fmt`
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: fmt
+      #     args: --all -- --check
 
-        # - name: Run tests
-        #   uses: actions-rs/cargo@v1
-        #   with:
-        #     command: test
-        #     args: --locked
+      # - name: Run tests
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: test
+      #     args: --locked
 
-        - name: Build   
-          uses: actions-rs/cargo@v1
-          with:
-            use-cross: ${{ matrix.job.use-cross }}
-            command: build
-            args: --locked --release --all-features --target=${{ matrix.job.target }}
+      - name: Build   
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: build
+          args: --locked --release --all-features --target=${{ matrix.job.target }}
 
-        - name: Get current rust app version from its Cargo.toml
-          id: version
-          if: steps.is-release.outputs.IS_RELEASE
-          uses: dante-signal31/rust-app-version@v1
+      - name: Get current rust app version from its Cargo.toml
+        id: version
+        if: steps.is-release.outputs.IS_RELEASE
+        uses: dante-signal31/rust-app-version@v1
 
-        - name: Extract crate information
-          if: steps.is-release.outputs.IS_RELEASE
-          shell: bash
-          run: |
-            echo "PROJECT_NAME=crab-dlna" >> $GITHUB_ENV
+      - name: Extract crate information
+        if: steps.is-release.outputs.IS_RELEASE
+        shell: bash
+        run: |
+          echo "PROJECT_NAME=crab-dlna" >> $GITHUB_ENV
 
-        - name: Strip debug information from executable
-          id: strip
-          if: steps.is-release.outputs.IS_RELEASE
-          shell: bash
-          run: |
-            # Figure out suffix of binary
-            EXE_suffix=""
-            case ${{ matrix.job.target }} in
-              *-pc-windows-*) EXE_suffix=".exe" ;;
-            esac;
+      - name: Strip debug information from executable
+        id: strip
+        if: steps.is-release.outputs.IS_RELEASE
+        shell: bash
+        run: |
+          # Figure out suffix of binary
+          EXE_suffix=""
+          case ${{ matrix.job.target }} in
+            *-pc-windows-*) EXE_suffix=".exe" ;;
+          esac;
 
-            # Figure out what strip tool to use if any
-            STRIP="strip"
-            case ${{ matrix.job.target }} in
-              arm-unknown-linux-*) STRIP="arm-linux-gnueabihf-strip" ;;
-              aarch64-unknown-linux-gnu) STRIP="aarch64-linux-gnu-strip" ;;
-              *-pc-windows-msvc) STRIP="" ;;
-            esac;
+          # Figure out what strip tool to use if any
+          STRIP="strip"
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) STRIP="arm-linux-gnueabihf-strip" ;;
+            aarch64-unknown-linux-gnu) STRIP="aarch64-linux-gnu-strip" ;;
+            *-pc-windows-msvc) STRIP="" ;;
+          esac;
 
-            # Setup paths
-            BIN_DIR="result-${{ matrix.job.target }}/stripped-release-bin"
-            mkdir -p "${BIN_DIR}"
-            BIN_NAME="${{ env.PROJECT_NAME }}${EXE_suffix}"
-            BIN_PATH="${BIN_DIR}/${BIN_NAME}"
+          # Setup paths
+          BIN_DIR="result-${{ matrix.job.target }}/stripped-release-bin"
+          mkdir -p "${BIN_DIR}"
+          BIN_NAME="${{ env.PROJECT_NAME }}${EXE_suffix}"
+          BIN_PATH="${BIN_DIR}/${BIN_NAME}"
 
-            # Copy the release build binary to the result location
-            cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "${BIN_DIR}"
+          # Copy the release build binary to the result location
+          cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "${BIN_DIR}"
 
-            # Also strip if possible
-            if [ -n "${STRIP}" ]; then
-              "${STRIP}" "${BIN_PATH}"
-            fi
+          # Also strip if possible
+          if [ -n "${STRIP}" ]; then
+            "${STRIP}" "${BIN_PATH}"
+          fi
 
-            # Let subsequent steps know where to find the (stripped) bin
-            echo ::set-output name=BIN_PATH::${BIN_PATH}
-            echo ::set-output name=BIN_NAME::${BIN_NAME}
+          # Let subsequent steps know where to find the (stripped) bin
+          echo ::set-output name=BIN_PATH::${BIN_PATH}
+          echo ::set-output name=BIN_NAME::${BIN_NAME}
 
-        - name: Create tarball
-          id: package
-          if: steps.is-release.outputs.IS_RELEASE
-          shell: bash
-          run: |
-            PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
+      - name: Create tarball
+        id: package
+        if: steps.is-release.outputs.IS_RELEASE
+        shell: bash
+        run: |
+          PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
 
-            PKG_BASENAME=${PROJECT_NAME}-v${{ steps.version.outputs.app_version }}-${{ matrix.job.target }}
-            PKG_NAME=${PKG_BASENAME}${PKG_suffix}
-            echo ::set-output name=PKG_NAME::${PKG_NAME}
+          PKG_BASENAME=${PROJECT_NAME}-v${{ steps.version.outputs.app_version }}-${{ matrix.job.target }}
+          PKG_NAME=${PKG_BASENAME}${PKG_suffix}
+          echo ::set-output name=PKG_NAME::${PKG_NAME}
 
-            PKG_STAGING="result-${{ matrix.job.target }}/package"
-            ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
-            mkdir -p "${ARCHIVE_DIR}"
+          PKG_STAGING="result-${{ matrix.job.target }}/package"
+          ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
+          mkdir -p "${ARCHIVE_DIR}"
 
-            # Binary
-            cp "${{ steps.strip.outputs.BIN_PATH }}" "$ARCHIVE_DIR"
+          # Binary
+          cp "${{ steps.strip.outputs.BIN_PATH }}" "$ARCHIVE_DIR"
 
-            # README file
-            cp "README.md" "$ARCHIVE_DIR"
+          # README file
+          cp "README.md" "$ARCHIVE_DIR"
 
-            # base compressed package
-            pushd "${PKG_STAGING}/" >/dev/null
-            case ${{ matrix.job.target }} in
-              *-pc-windows-*) 7z -y a "${PKG_NAME}" "${PKG_BASENAME}"/* | tail -2 ;;
-              *) tar czf "${PKG_NAME}" "${PKG_BASENAME}"/* ;;
-            esac;
-            popd >/dev/null
+          # base compressed package
+          pushd "${PKG_STAGING}/" >/dev/null
+          case ${{ matrix.job.target }} in
+            *-pc-windows-*) 7z -y a "${PKG_NAME}" "${PKG_BASENAME}"/* | tail -2 ;;
+            *) tar czf "${PKG_NAME}" "${PKG_BASENAME}"/* ;;
+          esac;
+          popd >/dev/null
 
-            # Let subsequent steps know where to find the compressed package
-            echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
+          # Let subsequent steps know where to find the compressed package
+          echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
 
-        - name: Upload tarball to release artifacts
-          if: steps.is-release.outputs.IS_RELEASE
-          uses: actions/upload-artifact@v3
-          with:
-            name: release-artifacts
-            path: ${{ steps.package.outputs.PKG_PATH }}
+      - name: Upload tarball to release artifacts
+        if: steps.is-release.outputs.IS_RELEASE
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-artifacts
+          path: ${{ steps.package.outputs.PKG_PATH }}
 
 
   github-release:
 
-    - name: Create GitHub release
-      needs: build-and-test
-      if: github.ref == 'refs/heads/main'
-      runs-on: ubuntu-latest
+    name: Create GitHub release
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
 
-      steps:
+    steps:
 
-        - name: Checkout repository
-          uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-        - name: Get current rust app version from its Cargo.toml
-          id: version
-          uses: dante-signal31/rust-app-version@v1
+      - name: Get current rust app version from its Cargo.toml
+        id: version
+        uses: dante-signal31/rust-app-version@v1
 
-        - name: Download release artifacts
-        - uses: actions/download-artifact@v3
-          with:
-            name: release-artifacts
-            path: downloaded-release-artifacts
+      - name: Download release artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release-artifacts
+          path: downloaded-release-artifacts
 
-        - name: Upload release binaries
-          uses: softprops/action-gh-release@v1
-          with:
-            tag_name: ${{ steps.version.outputs.app_version }}
-            files: downloaded-release-artifacts/*
+      - name: Upload release binaries
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.app_version }}
+          files: downloaded-release-artifacts/*
