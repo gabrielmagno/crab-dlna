@@ -93,6 +93,8 @@ jobs:
       - name: Create GitHub release from rust cargo
         id: create_rust_release
         uses: gabrielmagno/rust-release@master
+        with:
+          dry_run: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
