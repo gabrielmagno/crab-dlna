@@ -90,20 +90,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Create dummy files
+        shell: bash
+        run: |
+          mkdir output
+          echo "This is file 1" > output/file-1.txt
+          echo "This is file 2" > output/file-2.txt
+
+      # - name: "Artifact upload: tarball"
+      #   uses: actions/upload-artifact@master
+      #   with:
+      #     name: output
+      #     path: output
+
       - name: Create GitHub release from rust cargo
         id: create_rust_release
         uses: gabrielmagno/rust-release@master
-        with:
-          dry_run: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Upload release archive
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_rust_release.outputs.upload_url }}
-      #     asset_path: ${{ env.ASSET_PATH }}
-      #     asset_name: ${{ env.ASSET_NAME }}
-      #     asset_content_type: application/octet-stream
+      - name: Upload release archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_rust_release.outputs.upload_url }}
+          asset_path: output
+          asset_name: output
+          asset_content_type: application/octet-stream
