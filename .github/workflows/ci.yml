@@ -100,24 +100,24 @@ jobs:
       - name: Upload File 1
         uses: actions/upload-artifact@v3
         with:
-          name: binaries/
+          name: binaries
           path: output/file-1.txt
 
       - name: Upload File 2
         uses: actions/upload-artifact@v3
         with:
-          name: binaries/
+          name: binaries
           path: output/file-1.txt
 
       - uses: actions/download-artifact@v3
         with:
-          name: binaries/
-          path: downloaded-binaries/
+          name: binaries
+          path: downloaded-binaries
 
       - name: Display structure of downloaded files
         run: ls -R
-        working-directory: downloaded-binaries/
-        
+        working-directory: downloaded-binaries
+
       # - name: Create GitHub release from rust cargo
       #   id: create_rust_release
       #   uses: gabrielmagno/rust-release@master
