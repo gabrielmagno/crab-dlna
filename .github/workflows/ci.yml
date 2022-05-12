@@ -109,10 +109,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release binaries
-        uses: softprops/action-gh-release@v1
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          files: output/*
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: output/*
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+
+      # - name: Upload release binaries
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: output/*
 
       # - name: Upload release archive
       #   uses: actions/upload-release-asset@v1
