@@ -63,7 +63,7 @@ jobs:
   build-and-package:
 
     name: Build and Package - ${{ matrix.job.os }} (${{ matrix.job.target }})
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'refs/heads/main'
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
