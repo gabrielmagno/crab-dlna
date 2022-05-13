@@ -195,14 +195,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download release artifacts
-        if: ${{ steps.check_release.output.exists == 'false' }}
+        if: ${{ steps.check_release.outputs.exists == 'false' }}
         uses: actions/download-artifact@v3
         with:
           name: release-artifacts
           path: downloaded-release-artifacts
 
       - name: Upload binaries to release
-        if: ${{ steps.check_release.output.exists == 'false' }}
+        if: ${{ steps.check_release.outputs.exists == 'false' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
