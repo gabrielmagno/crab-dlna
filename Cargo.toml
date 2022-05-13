@@ -1,9 +1,14 @@
 [package]
 name = "crab-dlna"
 version = "0.1.0"
+authors = ["Gabriel Magno <gabrielmagno1@gmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/gabrielmagno/crab-dlna"
+homepage = "https://github.com/gabrielmagno/crab-dlna"
+description = "A minimal UPnP/DLNA media streamer"
+categories = ["command-line-utilities", "multimedia", "multimedia::video"]
+keywords = ["dlna", "upnp", "cli", "play", "video"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 log = "0.4"
