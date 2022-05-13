@@ -13,6 +13,8 @@ It allows you to play a local video file in your TV (or any other DLNA compatibl
 
 ## Installation
 
+In the GitHub Releases of this repository we provide [archives of precompiled binaries](https://github.com/gabrielmagno/crab-dlna/releases) of crab-dlna, available for **Linux**, **Windows**, and **macOS**.
+
 ### cargo
 
 Installation via cargo is done by installing the `crab-dlna` crate:
