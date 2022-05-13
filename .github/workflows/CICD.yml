@@ -182,21 +182,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Create GitHub release from rust cargo
-        id: create_rust_release
-        uses: gabrielmagno/rust-release@master
+      - name: Get current rust app version from its Cargo.toml
+        id: version
+        uses: dante-signal31/rust-app-version@v1.0.0
+
+      - name: Check if a tag for the current version already exists
+        uses: mukunku/tag-exists-action@v1.0.0
+        id: check_release
+        with: 
+          tag: v${{ steps.version.outputs.app_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download release artifacts
-        if: ${{ steps.create_rust_release.outputs.is_new_release == 'true' }}
+        if: ${{ steps.checkTag.check_release.exists == 'false' }}
         uses: actions/download-artifact@v3
         with:
           name: release-artifacts
           path: downloaded-release-artifacts
 
       - name: Upload binaries to release
-        if: ${{ steps.create_rust_release.outputs.is_new_release == 'true' }}
+        if: ${{ steps.checkTag.check_release.exists == 'false' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
