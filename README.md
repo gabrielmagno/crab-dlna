@@ -1,4 +1,6 @@
 # crab-dlna
+[![CICD](https://github.com/gabrielmagno/crab-dlna/actions/workflows/CICD.yml/badge.svg)](https://github.com/gabrielmagno/crab-dlna/actions/workflows/CICD.yml)
+[![Version info](https://img.shields.io/crates/v/crab-dlna.svg)](https://crates.io/crates/crab-dlna)
 
 crab-dlna is a minimal UPnP/DLNA media streamer, available both as a standlone CLI (command line interface) application and a Rust library.
 
@@ -25,6 +27,11 @@ cargo install crab-dlna --locked
 ```
 
 ## Usage (CLI)
+
+You can list all the CLI commands by running:
+```
+crab-dlna --help
+```
 
 ### List
 
@@ -115,6 +122,8 @@ async fn main() -> Result<(), Error> {
     play(render, media_streaming_server).await
 }
 ```
+
+You can access the full [documentation](https://docs.rs/crab-dlna/) to see more details about the library.
 
 ## License
 
