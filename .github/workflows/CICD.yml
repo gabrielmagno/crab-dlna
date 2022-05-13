@@ -28,7 +28,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install rust toolchain (stable)
+      - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
             target: ${{ matrix.job.target }}
@@ -89,7 +89,7 @@ jobs:
           unset IS_RELEASE ; if [[ $GITHUB_REF = "refs/heads/main" ]]; then IS_RELEASE='true' ; fi
           echo ::set-output name=IS_RELEASE::${IS_RELEASE}
 
-      - name: Install rust toolchain (stable)
+      - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
             target: ${{ matrix.job.target }}
