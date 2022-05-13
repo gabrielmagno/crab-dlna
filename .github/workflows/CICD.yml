@@ -59,7 +59,7 @@ jobs:
           command: test
           args: --locked
 
-
+  # FIXME: this job is not running in pull requests
   build-and-package:
 
     name: Build and Package - ${{ matrix.job.os }} (${{ matrix.job.target }})
