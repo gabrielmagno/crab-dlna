@@ -7,7 +7,7 @@ repository = "https://github.com/gabrielmagno/crab-dlna"
 homepage = "https://github.com/gabrielmagno/crab-dlna"
 description = "A minimal UPnP/DLNA media streamer"
 categories = ["command-line-utilities", "multimedia", "multimedia::video"]
-keywords = ["dlna", "upnp", "cli", "play", "video"]
+keywords = ["dlna", "upnp", "cli", "stream", "video"]
 edition = "2021"
 
 [dependencies]
