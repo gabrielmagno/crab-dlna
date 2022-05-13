@@ -1,4 +1,7 @@
-name: Continuous Integration and Delivery
+# This workflow was inspired by the CICD from sharkdp/bat:
+# https://github.com/sharkdp/bat/blob/master/.github/workflows/CICD.yml)
+
+name: CI/CD
 
 on:
   push:
@@ -100,16 +103,11 @@ jobs:
           command: build
           args: --release --all-features --target=${{ matrix.job.target }}
 
-      - name: Get current rust app version from its Cargo.toml
-        id: version
-        if: steps.is-release.outputs.IS_RELEASE
-        uses: dante-signal31/rust-app-version@v1.0.0
-
       - name: Extract crate information
-        if: steps.is-release.outputs.IS_RELEASE
         shell: bash
         run: |
-          echo "PROJECT_NAME=crab-dlna" >> $GITHUB_ENV
+          echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
 
       - name: Create tarball package with the binary
         id: package
@@ -128,10 +126,10 @@ jobs:
             *-pc-windows-*) PKG_suffix=".zip" ;; 
           esac;
 
-          BIN_NAME="${{ env.PROJECT_NAME }}${EXE_suffix}"
+          BIN_NAME="${PROJECT_NAME}${EXE_suffix}"
           BIN_PATH="target/${{ matrix.job.target }}/release/${BIN_NAME}"
 
-          PKG_BASENAME=${PROJECT_NAME}-v${{ steps.version.outputs.app_version }}-${{ matrix.job.target }}
+          PKG_BASENAME=${PROJECT_NAME}-v${PROJECT_VERSION}-${{ matrix.job.target }}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
 
           PKG_STAGING="result-${{ matrix.job.target }}/package"
@@ -177,15 +175,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Get current rust app version from its Cargo.toml
-        id: version
-        uses: dante-signal31/rust-app-version@v1.0.0
+      - name: Extract crate information
+        shell: bash
+        run: |
+          echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
 
       - name: Check if a tag for the current version already exists
         uses: mukunku/tag-exists-action@v1.0.0
         id: check_release
         with: 
-          tag: v${{ steps.version.outputs.app_version }}
+          tag: v${{ env.PROJECT_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -202,7 +202,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: downloaded-release-artifacts/*
-          tag: v${{ steps.version.outputs.app_version }}
-          body: "crab-dlna v${{ steps.version.outputs.app_version }}"
+          tag: v${{ env.PROJECT_VERSION }}
+          body: "crab-dlna v${{ env.PROJECT_VERSION }}"
           overwrite: true
           file_glob: true
