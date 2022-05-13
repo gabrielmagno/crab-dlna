@@ -115,3 +115,11 @@ async fn main() -> Result<(), Error> {
     play(render, media_streaming_server).await
 }
 ```
+
+## License
+
+Copyright (c) 2022 Gabriel Magno.
+
+`crab-dlna` is made available under the terms of either the MIT License or the Apache License 2.0, at your option.
+
+See the [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) files for license details.
