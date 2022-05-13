@@ -79,14 +79,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install prerequisites
-        shell: bash
-        run: |
-          case ${{ matrix.job.target }} in
-            arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
-            aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
-          esac
-
       - name: Check for release
         id: is-release
         shell: bash
@@ -119,8 +111,8 @@ jobs:
         run: |
           echo "PROJECT_NAME=crab-dlna" >> $GITHUB_ENV
 
-      - name: Strip debug information from executable
-        id: strip
+      - name: Create tarball package with the binary
+        id: package
         if: steps.is-release.outputs.IS_RELEASE
         shell: bash
         run: |
@@ -130,52 +122,28 @@ jobs:
             *-pc-windows-*) EXE_suffix=".exe" ;;
           esac;
 
-          # Figure out what strip tool to use if any
-          STRIP="strip"
-          case ${{ matrix.job.target }} in
-            arm-unknown-linux-*) STRIP="arm-linux-gnueabihf-strip" ;;
-            aarch64-unknown-linux-gnu) STRIP="aarch64-linux-gnu-strip" ;;
-            *-pc-windows-msvc) STRIP="" ;;
+          # Figure out suffix of archive
+          PKG_suffix=".tar.gz"
+          case ${{ matrix.job.target }} in 
+            *-pc-windows-*) PKG_suffix=".zip" ;; 
           esac;
 
-          # Setup paths
-          BIN_DIR="result-${{ matrix.job.target }}/stripped-release-bin"
-          mkdir -p "${BIN_DIR}"
           BIN_NAME="${{ env.PROJECT_NAME }}${EXE_suffix}"
-          BIN_PATH="${BIN_DIR}/${BIN_NAME}"
-
-          # Copy the release build binary to the result location
-          cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "${BIN_DIR}"
-
-          # Also strip if possible
-          if [ -n "${STRIP}" ]; then
-            "${STRIP}" "${BIN_PATH}"
-          fi
-
-          # Let subsequent steps know where to find the (stripped) bin
-          echo ::set-output name=BIN_PATH::${BIN_PATH}
-          echo ::set-output name=BIN_NAME::${BIN_NAME}
-
-      - name: Create tarball
-        id: package
-        if: steps.is-release.outputs.IS_RELEASE
-        shell: bash
-        run: |
-          PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
+          BIN_PATH="target/${{ matrix.job.target }}/release/${BIN_NAME}"
 
           PKG_BASENAME=${PROJECT_NAME}-v${{ steps.version.outputs.app_version }}-${{ matrix.job.target }}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
-          echo ::set-output name=PKG_NAME::${PKG_NAME}
 
           PKG_STAGING="result-${{ matrix.job.target }}/package"
           ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
+
           mkdir -p "${ARCHIVE_DIR}"
 
           # Binary
-          cp "${{ steps.strip.outputs.BIN_PATH }}" "$ARCHIVE_DIR"
+          cp "$BIN_PATH" "$ARCHIVE_DIR"
 
-          # README file
-          cp "README.md" "$ARCHIVE_DIR"
+          # README and LICENSE files
+          cp "README.md" "LICENSE-MIT" "LICENSE-APACHE" "$ARCHIVE_DIR"
 
           # base compressed package
           pushd "${PKG_STAGING}/" >/dev/null
