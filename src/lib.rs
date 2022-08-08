@@ -97,4 +97,4 @@ mod error;
 pub use devices::{Render, RenderSpec};
 pub use dlna::play;
 pub use error::Error;
-pub use streaming::{get_serve_ip, infer_subtitle_from_video, MediaStreamingServer};
+pub use streaming::{get_local_ip, infer_subtitle_from_video, MediaStreamingServer};
