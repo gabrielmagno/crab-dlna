@@ -5,11 +5,14 @@ use crate::{
 };
 use log::{debug, info};
 use xml::escape::escape_str_attribute;
+use tokio::time::{sleep, Duration};
 
 const PAYLOAD_PLAY: &str = r#"
     <InstanceID>0</InstanceID>
     <Speed>1</Speed>
 "#;
+
+const STREAMING_SERVER_WAIT_SECS: u64 = 5;
 
 /// Plays a media file in a DLNA compatible device render, according to the render and media streaming server provided
 pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Result<()> {
@@ -59,6 +62,9 @@ pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Res
 
     info!("Starting media streaming server...");
     let streaming_server_handle = tokio::spawn(async move { streaming_server.run().await });
+
+    debug!("Explicitly waiting {} seconds for streaming server to finish loading", STREAMING_SERVER_WAIT_SECS);
+    sleep(Duration::from_secs(STREAMING_SERVER_WAIT_SECS)).await;
 
     info!("Setting Video URI");
     render
