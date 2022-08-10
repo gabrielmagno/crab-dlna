@@ -38,8 +38,8 @@
                 }
             },
             "args": [
+                "-b",
                 "play",
-                "-n",
                 "-q",
                 "Kodi",
                 "sample/video.mp4"
@@ -62,6 +62,7 @@
                 }
             },
             "args": [
+                "-b",
                 "list"
             ],
             "cwd": "${workspaceFolder}"
