@@ -18,7 +18,7 @@ tokio = { version = "1", features = ["full"] }
 pin-utils = "0.1"
 xml-rs = "0.8"
 http = "0.2"
-rupnp = { version = "1.1.2", git = "https://github.com/gabrielmagno/rupnp" }
+rupnp = "1.1"
 local-ip-address = "0.4.6"
 warp = "0.3"
 clap = { version = "3.1.15", features = ["derive"] }
