@@ -12,7 +12,7 @@ const PAYLOAD_PLAY: &str = r#"
     <Speed>1</Speed>
 "#;
 
-const STREAMING_SERVER_WAIT_SECS: u64 = 5;
+const STREAMING_SERVER_WAIT_SECS: u64 = 2;
 
 /// Plays a media file in a DLNA compatible device render, according to the render and media streaming server provided
 pub async fn play(render: Render, streaming_server: MediaStreamingServer) -> Result<()> {
