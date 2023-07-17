@@ -2,7 +2,7 @@ use crate::{
     devices::{Render, RenderSpec},
     dlna,
     error::Result,
-    streaming::{get_serve_ip, infer_subtitle_from_video, MediaStreamingServer},
+    streaming::{get_local_ip, infer_subtitle_from_video, MediaStreamingServer},
 };
 use clap::{Args, Parser, Subcommand};
 use log::info;
@@ -107,7 +107,7 @@ struct Play {
 impl Play {
     async fn run(&self, cli: &Cli) -> Result<()> {
         let render = self.select_render(cli).await?;
-        let media_streaming_server = self.build_media_streaming_server(&render).await?;
+        let media_streaming_server = self.build_media_streaming_server().await?;
         dlna::play(render, media_streaming_server).await
     }
 
@@ -123,9 +123,9 @@ impl Play {
         .await
     }
 
-    async fn build_media_streaming_server(&self, render: &Render) -> Result<MediaStreamingServer> {
+    async fn build_media_streaming_server(&self) -> Result<MediaStreamingServer> {
         info!("Building media streaming server");
-        let local_host_ip = get_serve_ip(&render.host()).await?;
+        let local_host_ip = get_local_ip().await?;
         let host_ip = self.host.as_ref().unwrap_or(&local_host_ip);
 
         let subtitle = match &self.no_subtitle {

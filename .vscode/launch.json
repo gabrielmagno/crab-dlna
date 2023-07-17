@@ -25,6 +25,51 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug executable 'crab-dlna' play",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=crab-dlna",
+                    "--package=crab-dlna"
+                ],
+                "filter": {
+                    "name": "crab-dlna",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-b",
+                "play",
+                "-q",
+                "Kodi",
+                "sample/video.mp4"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'crab-dlna' list",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=crab-dlna",
+                    "--package=crab-dlna"
+                ],
+                "filter": {
+                    "name": "crab-dlna",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-b",
+                "list"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug unit tests in executable 'crab-dlna'",
             "cargo": {
                 "args": [

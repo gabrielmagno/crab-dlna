@@ -1,10 +1,10 @@
 use crate::error::{Error, Result};
+use local_ip_address::local_ip;
 use log::{debug, info, warn};
 use slugify::slugify;
-use std::net::{SocketAddr, UdpSocket};
+use std::net::SocketAddr;
 use warp::Filter;
 
-const DUMMY_PORT: u32 = 0;
 const STREAMING_PORT: u32 = 9000;
 
 /// A media file to stream
@@ -42,9 +42,10 @@ impl MediaStreamingServer {
         subtitle_path: &Option<std::path::PathBuf>,
         host_ip: &String,
     ) -> Result<Self> {
-        let server_addr: SocketAddr = format!("{}:{}", host_ip, STREAMING_PORT)
+        let server_addr_str = format!("{}:{}", host_ip, STREAMING_PORT);
+        let server_addr: SocketAddr = server_addr_str
             .parse()
-            .map_err(|_| Error::StreamingHostParseError(host_ip.to_owned()))?;
+            .map_err(|_| Error::StreamingHostParseError(server_addr_str))?;
 
         debug!("Streaming server address: {}", server_addr);
 
@@ -161,21 +162,11 @@ impl MediaStreamingServer {
     }
 }
 
-/// Identifies the local serve IP address according to a target host.
-pub async fn get_serve_ip(target_host: &String) -> Result<String> {
-    debug!(
-        "Identifying local serve IP for target host: {}",
-        target_host
-    );
-    let target_addr: SocketAddr = format!("{}:{}", target_host, DUMMY_PORT)
-        .parse()
-        .map_err(|_| Error::StreamingHostParseError(target_host.to_owned()))?;
-
-    Ok(UdpSocket::bind(target_addr)
-        .map_err(|err| Error::StreamingRemoteRenderConnectFail(target_addr.to_string(), err))?
-        .local_addr()
+/// Identifies the local serve IP address.
+pub async fn get_local_ip() -> Result<String> {
+    debug!("Identifying local IP address of host");
+    Ok(local_ip()
         .map_err(Error::StreamingIdentifyLocalAddressError)?
-        .ip()
         .to_string())
 }
 

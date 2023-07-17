@@ -21,7 +21,7 @@ pub enum Error {
     /// An error occurred while trying to connect to the render
     StreamingRemoteRenderConnectFail(String, std::io::Error),
     /// An error occurred while trying to identify the host IP address
-    StreamingIdentifyLocalAddressError(std::io::Error),
+    StreamingIdentifyLocalAddressError(local_ip_address::Error),
     /// An error occurred while sending the SetAVTransportURI DLNA action to the render
     DLNASetAVTransportURIError(rupnp::Error),
     /// An error occurred while sending the Play DLNA action to the render
@@ -54,7 +54,9 @@ impl fmt::Display for Error {
                     write!(f, "No render found within {} seconds", timeout)
                 }
             },
-            Error::StreamingHostParseError(host) => write!(f, "Failed to parse host '{}'", host),
+            Error::StreamingHostParseError(addr) => {
+                write!(f, "Failed to parse host address '{}'", addr)
+            }
             Error::StreamingFileDoesNotExist(file) => write!(f, "File '{}' does not exist", file),
             Error::StreamingRemoteRenderConnectFail(host, err) => {
                 write!(f, "Failed to connect to remote render '{}': {}", host, err)

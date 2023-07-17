@@ -41,7 +41,7 @@ use crab_dlna::{
     Render,
     RenderSpec,
     MediaStreamingServer,
-    get_serve_ip,
+    get_local_ip,
     infer_subtitle_from_video,
     Error,
     play,
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Error> {
     let discover_timeout_secs = 5;
     let render_spec = RenderSpec::Query(discover_timeout_secs, "Kodi".to_string());
     let render = Render::new(render_spec).await?;
-    let host_ip = get_serve_ip(&render.host()).await?;
+    let host_ip = get_local_ip().await?;
     let video_path = PathBuf::from("/home/crab/Videos/my_video.mp4");
     let inferred_subtitle_path = infer_subtitle_from_video(&video_path);
     let media_streaming_server = MediaStreamingServer::new(
@@ -97,4 +97,4 @@ mod error;
 pub use devices::{Render, RenderSpec};
 pub use dlna::play;
 pub use error::Error;
-pub use streaming::{get_serve_ip, infer_subtitle_from_video, MediaStreamingServer};
+pub use streaming::{get_local_ip, infer_subtitle_from_video, MediaStreamingServer};

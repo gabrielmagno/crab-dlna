@@ -1,6 +1,6 @@
 [package]
 name = "crab-dlna"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Gabriel Magno <gabrielmagno1@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/gabrielmagno/crab-dlna"
@@ -19,6 +19,7 @@ pin-utils = "0.1"
 xml-rs = "0.8"
 http = "0.2"
 rupnp = "1.1"
+local-ip-address = "0.4.6"
 warp = "0.3"
 clap = { version = "3.1.15", features = ["derive"] }
 slugify = "0.1.0"
