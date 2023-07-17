@@ -54,7 +54,9 @@ impl fmt::Display for Error {
                     write!(f, "No render found within {} seconds", timeout)
                 }
             },
-            Error::StreamingHostParseError(addr) => write!(f, "Failed to parse host address '{}'", addr),
+            Error::StreamingHostParseError(addr) => {
+                write!(f, "Failed to parse host address '{}'", addr)
+            }
             Error::StreamingFileDoesNotExist(file) => write!(f, "File '{}' does not exist", file),
             Error::StreamingRemoteRenderConnectFail(host, err) => {
                 write!(f, "Failed to connect to remote render '{}': {}", host, err)

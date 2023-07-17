@@ -1,8 +1,8 @@
 use crate::error::{Error, Result};
+use local_ip_address::local_ip;
 use log::{debug, info, warn};
 use slugify::slugify;
 use std::net::SocketAddr;
-use local_ip_address::local_ip;
 use warp::Filter;
 
 const STREAMING_PORT: u32 = 9000;
