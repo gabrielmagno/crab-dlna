@@ -88,7 +88,7 @@ struct Play {
     #[clap(short = 'H', long = "host")]
     host: Option<String>,
 
-    /// The hostname or IP to be used to host and serve the files (if not provided we derive it from the local network address)
+    /// The port to be used to host and serve the files
     #[clap(short = 'P', long = "port", default_value_t=STREAMING_PORT_DEFAULT)]
     port: u32,
 
