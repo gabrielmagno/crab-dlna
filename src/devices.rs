@@ -86,11 +86,8 @@ impl Render {
             .map_err(Error::DevicesNextDeviceError)?
         {
             debug!("Found device: {}", format_device!(device));
-            match Self::from_device(device).await {
-                Some(render) => {
-                    renders.push(render);
-                }
-                None => {}
+            if let Some(render) = Self::from_device(device).await {
+                renders.push(render);
             };
         }
 
