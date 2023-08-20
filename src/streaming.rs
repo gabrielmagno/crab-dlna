@@ -5,7 +5,8 @@ use slugify::slugify;
 use std::net::SocketAddr;
 use warp::Filter;
 
-const STREAMING_PORT: u32 = 9000;
+/// Default port to use for the streaming server
+pub const STREAMING_PORT_DEFAULT: u32 = 9000;
 
 /// A media file to stream
 #[derive(Debug, Clone)]
@@ -41,8 +42,9 @@ impl MediaStreamingServer {
         video_path: &std::path::Path,
         subtitle_path: &Option<std::path::PathBuf>,
         host_ip: &String,
+        host_port: &u32,
     ) -> Result<Self> {
-        let server_addr_str = format!("{}:{}", host_ip, STREAMING_PORT);
+        let server_addr_str = format!("{}:{}", host_ip, host_port);
         let server_addr: SocketAddr = server_addr_str
             .parse()
             .map_err(|_| Error::StreamingHostParseError(server_addr_str))?;
