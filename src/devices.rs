@@ -95,7 +95,6 @@ impl Render {
                     debug!("A device returned error while discovering it: {}", e);
                 }
             }
-
         }
 
         Ok(renders)
