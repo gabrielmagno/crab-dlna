@@ -1,6 +1,6 @@
 [package]
 name = "crab-dlna"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Gabriel Magno <gabrielmagno1@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/gabrielmagno/crab-dlna"
