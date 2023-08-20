@@ -2,7 +2,9 @@ use crate::{
     devices::{Render, RenderSpec},
     dlna,
     error::Result,
-    streaming::{get_local_ip, infer_subtitle_from_video, MediaStreamingServer},
+    streaming::{
+        get_local_ip, infer_subtitle_from_video, MediaStreamingServer, STREAMING_PORT_DEFAULT,
+    },
 };
 use clap::{Args, Parser, Subcommand};
 use log::info;
@@ -83,6 +85,10 @@ struct Play {
     #[clap(short = 'H', long = "host")]
     host: Option<String>,
 
+    /// The port to be used to host and serve the files
+    #[clap(short = 'P', long = "port", default_value_t=STREAMING_PORT_DEFAULT)]
+    port: u32,
+
     /// Specify the device where to play through a query (scan devices before playing)
     #[clap(short = 'q', long = "query-device")]
     device_query: Option<String>,
@@ -127,6 +133,7 @@ impl Play {
         info!("Building media streaming server");
         let local_host_ip = get_local_ip().await?;
         let host_ip = self.host.as_ref().unwrap_or(&local_host_ip);
+        let host_port = self.port;
 
         let subtitle = match &self.no_subtitle {
             false => self
@@ -136,7 +143,7 @@ impl Play {
             true => None,
         };
 
-        MediaStreamingServer::new(&self.file_video, &subtitle, host_ip)
+        MediaStreamingServer::new(&self.file_video, &subtitle, host_ip, &host_port)
     }
 }
 
