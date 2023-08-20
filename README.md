@@ -70,7 +70,7 @@ Add `crab-dlna` and `tokio` to your dependencies:
 ```toml
 [dependencies] 
 tokio = { version = "1", features = ["full"] }
-crab-dlna = "0.1.1"
+crab-dlna = "0.1.2"
 ```
 
 ### Example: discover and list devices
