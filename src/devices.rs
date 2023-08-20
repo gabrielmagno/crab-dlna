@@ -80,18 +80,21 @@ impl Render {
 
         let mut renders = Vec::new();
 
-        while let Some(device) = devices
-            .try_next()
+        while let Some(result) = devices
+            .next()
             .await
-            .map_err(Error::DevicesNextDeviceError)?
         {
-            debug!("Found device: {}", format_device!(device));
-            match Self::from_device(device).await {
-                Some(render) => {
-                    renders.push(render);
+            match result {
+                Ok(device) => {
+                    debug!("Found device: {}", format_device!(device));
+                    if let Some(render) = Self::from_device(device).await {
+                        renders.push(render);
+                    };
                 }
-                None => {}
-            };
+                Err(e) => {
+                    debug!("A device returned error while discovering it: {}", e);
+                }
+            }
         }
 
         Ok(renders)

@@ -6,8 +6,6 @@ use std::fmt;
 pub enum Error {
     /// An error occurred while discovering devices
     DevicesDiscoverFail(rupnp::Error),
-    /// An error occurred while iterating over discovered devices
-    DevicesNextDeviceError(rupnp::Error),
     /// An error occurred while parsing a device URL
     DevicesUrlParseError(String),
     /// An error occurred while parsing and creating a device
@@ -34,7 +32,6 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::DevicesDiscoverFail(err) => write!(f, "Failed to discover devices: {}", err),
-            Error::DevicesNextDeviceError(err) => write!(f, "Failed to get next device: {}", err),
             Error::DevicesUrlParseError(url) => write!(f, "Failed to parse URL '{}'", url),
             Error::DevicesCreateError(url, err) => write!(
                 f,
@@ -77,7 +74,6 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::DevicesDiscoverFail(err) => Some(err),
-            Error::DevicesNextDeviceError(err) => Some(err),
             Error::DevicesCreateError(_, err) => Some(err),
             Error::StreamingRemoteRenderConnectFail(_, err) => Some(err),
             Error::StreamingIdentifyLocalAddressError(err) => Some(err),
