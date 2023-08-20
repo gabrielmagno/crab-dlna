@@ -80,10 +80,7 @@ impl Render {
 
         let mut renders = Vec::new();
 
-        while let Some(result) = devices
-            .next()
-            .await
-        {
+        while let Some(result) = devices.next().await {
             match result {
                 Ok(device) => {
                     debug!("Found device: {}", format_device!(device));

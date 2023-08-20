@@ -3,10 +3,7 @@ use crate::{
     dlna,
     error::Result,
     streaming::{
-        STREAMING_PORT_DEFAULT,
-        get_local_ip,
-        infer_subtitle_from_video,
-        MediaStreamingServer
+        get_local_ip, infer_subtitle_from_video, MediaStreamingServer, STREAMING_PORT_DEFAULT,
     },
 };
 use clap::{Args, Parser, Subcommand};
