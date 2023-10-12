@@ -85,4 +85,10 @@ impl std::error::Error for Error {
     }
 }
 
+impl From<ssdp_client::Error> for Error {
+    fn from(err: ssdp_client::Error) -> Self {
+        Error::DevicesDiscoverFail(rupnp::Error::SSDPError(err))
+    }
+}
+
 pub type Result<T, E = Error> = std::result::Result<T, E>;

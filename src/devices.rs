@@ -1,8 +1,8 @@
 use crate::error::{Error, Result};
-use futures::prelude::*;
 use http::Uri;
 use log::{debug, info, warn};
 use rupnp::ssdp::{SearchTarget, URN};
+use futures_util::stream::{Stream, StreamExt, TryStreamExt};
 use std::time::Duration;
 
 const AV_TRANSPORT: URN = URN::service("schemas-upnp-org", "AVTransport", 1);
@@ -72,9 +72,8 @@ impl Render {
             duration_secs
         );
         let search_target = SearchTarget::URN(AV_TRANSPORT);
-        let devices = rupnp::discover(&search_target, Duration::from_secs(duration_secs))
-            .await
-            .map_err(Error::DevicesDiscoverFail)?;
+        let devices = upnp_discover(&search_target, Duration::from_secs(duration_secs), Some(4))
+            .await?;
 
         pin_utils::pin_mut!(devices);
 
@@ -155,4 +154,16 @@ impl std::fmt::Display for Render {
             self.device.url()
         )
     }
+}
+
+async fn upnp_discover(
+    search_target: &SearchTarget,
+    timeout: Duration,
+    ttl: Option<u32>,
+) -> Result<impl Stream<Item = Result<rupnp::Device, rupnp::Error>>> {
+    Ok(ssdp_client::search(search_target, timeout, 3, ttl)
+        .await?
+        .map_err(rupnp::Error::SSDPError)
+        .map(|res| Ok(res?.location().parse()?))
+        .and_then(rupnp::Device::from_url))
 }
