@@ -1,8 +1,8 @@
 use crate::error::{Error, Result};
+use futures_util::stream::{Stream, StreamExt, TryStreamExt};
 use http::Uri;
 use log::{debug, info, warn};
 use rupnp::ssdp::{SearchTarget, URN};
-use futures_util::stream::{Stream, StreamExt, TryStreamExt};
 use std::time::Duration;
 
 const AV_TRANSPORT: URN = URN::service("schemas-upnp-org", "AVTransport", 1);
@@ -72,8 +72,8 @@ impl Render {
             duration_secs
         );
         let search_target = SearchTarget::URN(AV_TRANSPORT);
-        let devices = upnp_discover(&search_target, Duration::from_secs(duration_secs), Some(4))
-            .await?;
+        let devices =
+            upnp_discover(&search_target, Duration::from_secs(duration_secs), Some(4)).await?;
 
         pin_utils::pin_mut!(devices);
 
